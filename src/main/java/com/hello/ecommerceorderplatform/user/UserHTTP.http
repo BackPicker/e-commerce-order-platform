@@ -1,0 +1,10 @@
+POST http://localhost:8080/api/users/signup
+Content-Type: application/json
+
+{
+  "username": "happy1",
+  "password": "Socom!23",
+  "phoneNumber": "01012341234",
+  "email": "abcd@naver.com",
+  "address": "서울시"
+}
