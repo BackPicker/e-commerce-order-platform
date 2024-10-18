@@ -2,13 +2,7 @@ package com.hello.ecommerceorderplatform.user.domain;
 
 
 import jakarta.persistence.*;
-import lombok.AccessLevel;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.ToString;
-
-import java.util.ArrayList;
-import java.util.List;
+import lombok.*;
 
 @Entity
 @Getter
@@ -45,6 +39,7 @@ public class User {
 */
 
 
+    @Builder
     public User(String username, String password, String phoneNumber, String email, String address, UserRoleEnum userRoleEnum) {
         this.username     = username;
         this.password     = password;
@@ -54,9 +49,6 @@ public class User {
         this.userRoleEnum = userRoleEnum;
     }
 
-    private String formatPhoneNumber(String phoneNumber) {
-        // 하이픈(-)을 포함한 전화번호로 변환
-        return phoneNumber.replaceAll("(\\d{3})(\\d{4})(\\d{4})", "$1-$2-$3");
-    }
+
 }
 

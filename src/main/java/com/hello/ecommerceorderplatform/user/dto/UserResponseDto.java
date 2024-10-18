@@ -1,11 +1,11 @@
-package com.hello.ecommerceorderplatform.user.domain.dto;
+package com.hello.ecommerceorderplatform.user.dto;
 
 import com.hello.ecommerceorderplatform.user.domain.User;
 import com.hello.ecommerceorderplatform.user.domain.UserRoleEnum;
 import lombok.Getter;
 
 @Getter
-public class UserRegisterResponseDto {
+public class UserResponseDto {
 
     private String       username;
     private String       email;
@@ -13,7 +13,7 @@ public class UserRegisterResponseDto {
     private String       phoneNumber;
     private UserRoleEnum userRole;
 
-    public UserRegisterResponseDto(User user) {
+    public UserResponseDto(User user) {
         this.username    = user.getUsername();
         this.email       = user.getEmail();
         this.address     = user.getAddress();

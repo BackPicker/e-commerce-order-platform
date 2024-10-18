@@ -8,3 +8,12 @@ Content-Type: application/json
   "email": "abcd@naver.com",
   "address": "서울시"
 }
+
+//
+POST http://localhost:8080/api/users/signup
+Content-Type: application/json
+
+{
+"id": 999,
+"value": "content"
+}

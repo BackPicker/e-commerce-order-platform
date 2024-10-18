@@ -1,9 +1,12 @@
 package com.hello.ecommerceorderplatform.user.controller;
 
 
-import com.hello.ecommerceorderplatform.user.domain.dto.UserRegisterRequestDto;
-import com.hello.ecommerceorderplatform.user.domain.dto.UserRegisterResponseDto;
+import com.hello.ecommerceorderplatform.user.dto.LoginRequestDto;
+import com.hello.ecommerceorderplatform.user.dto.LoginResponseDto;
+import com.hello.ecommerceorderplatform.user.dto.UserRegisterRequestDto;
+import com.hello.ecommerceorderplatform.user.dto.UserResponseDto;
 import com.hello.ecommerceorderplatform.user.service.UserService;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -26,9 +29,8 @@ public class UserController {
     private final UserService userService;
 
     @PostMapping("/signup")
-    public ResponseEntity<UserRegisterResponseDto> createMember(
+    public ResponseEntity<UserResponseDto> createMember(
             @Valid @RequestBody UserRegisterRequestDto userRegisterRequestDto, BindingResult bindingResult) {
-        log.info("컨트롤러 접근");
         List<FieldError> fieldErrors = bindingResult.getFieldErrors();
         if (!fieldErrors.isEmpty()) {
             for (FieldError fieldError : fieldErrors) {
@@ -40,5 +42,28 @@ public class UserController {
         return userService.createMember(userRegisterRequestDto);
     }
 
+    @PostMapping("/login")
+    public ResponseEntity<LoginResponseDto> login(@RequestBody LoginRequestDto requestDto, HttpServletResponse res) {
+        String username = userService.login(requestDto, res);
+        return ResponseEntity.ok(new LoginResponseDto(username));
+    }
+
+    /**
+     * 로그아웃
+     */
+    @PostMapping("/logout")
+    public ResponseEntity<?> logout(HttpServletResponse response) {
+        userService.logout(response);
+        return ResponseEntity.ok("Logout successful.");
+    }
+
+    /**
+     * 회원 정보 변경
+     */
+
+
+    /**
+     * 회원 비밀번호 변경
+     */
 
 }

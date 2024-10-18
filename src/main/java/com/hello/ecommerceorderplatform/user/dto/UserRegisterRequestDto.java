@@ -1,4 +1,4 @@
-package com.hello.ecommerceorderplatform.user.domain.dto;
+package com.hello.ecommerceorderplatform.user.dto;
 
 
 import jakarta.validation.constraints.NotBlank;
