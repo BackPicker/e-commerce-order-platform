@@ -49,6 +49,8 @@ dependencies {
 
     //redis 설정
     implementation 'org.springframework.boot:spring-boot-starter-data-redis'
+    //redisson 유틸추가
+    implementation 'org.redisson:redisson-spring-boot-starter:3.22.1'
 
     implementation 'org.springframework.boot:spring-boot-starter-validation'
     implementation 'org.springframework.boot:spring-boot-starter-mail'

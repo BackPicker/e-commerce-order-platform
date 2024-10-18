@@ -34,7 +34,6 @@ public class Item {
     private String description; // 상품 설명
 
     @CreatedDate
-    @Temporal(TemporalType.TIMESTAMP)
     private LocalDateTime createdAt = LocalDateTime.now();    // 수량 등록일
 
     @ManyToOne(fetch = FetchType.LAZY)

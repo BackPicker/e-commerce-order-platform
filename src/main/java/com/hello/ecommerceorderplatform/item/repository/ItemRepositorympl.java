@@ -1,10 +1,8 @@
 package com.hello.ecommerceorderplatform.item.repository;
 
-import com.hello.ecommerceorderplatform.item.domain.Item;
 import com.hello.ecommerceorderplatform.item.dto.*;
 import com.querydsl.core.types.Predicate;
 import com.querydsl.core.types.dsl.BooleanExpression;
-import com.querydsl.jpa.impl.JPAQuery;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import jakarta.persistence.EntityManager;
 import org.springframework.data.domain.Page;
@@ -13,6 +11,7 @@ import org.springframework.data.support.PageableExecutionUtils;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 
 import static com.hello.ecommerceorderplatform.item.domain.QItem.item;
 
@@ -29,16 +28,17 @@ public class ItemRepositorympl {
 
         List<ItemResponseDto> content = factory.select(new QItemResponseDto(item.itemName, item.category, item.price, item.quantity))
                 .from(item)
-                .where(itemNameCheck(searchCondition.getItemName()), itemQuantityLoeCheck( searchCondition.getItemQuantityLoe()),
-                        itemPriceLoeCheck(searchCondition.getItemPriceLoe()), itemPriceGoeCheck(searchCondition.getItemPriceGoe()))
+                .where(itemNameCheck(searchCondition.getItemName()), itemQuantityLoeCheck(searchCondition.getItemQuantityLoe()), itemPriceLoeCheck(searchCondition.getItemPriceLoe()), itemPriceGoeCheck(searchCondition.getItemPriceGoe()))
                 .offset(pageable.getOffset())
                 .limit(pageable.getPageSize())
                 .fetch();
 
-        JPAQuery<Item> count = factory.selectFrom(item)
-                .where(itemNameCheck(searchCondition.getItemName()), itemQuantityLoeCheck(searchCondition.getItemQuantityLoe()),
-                        itemPriceLoeCheck(searchCondition.getItemPriceLoe()), itemPriceGoeCheck(searchCondition.getItemPriceGoe()));
-        return PageableExecutionUtils.getPage(content, pageable, count.fetch()::size);
+        long totalCount = Optional.ofNullable(factory.select(item.count())
+                        .from(item)
+                        .where(itemNameCheck(searchCondition.getItemName()), itemQuantityLoeCheck(searchCondition.getItemQuantityLoe()), itemPriceLoeCheck(searchCondition.getItemPriceLoe()), itemPriceGoeCheck(searchCondition.getItemPriceGoe()))
+                        .fetchOne())
+                .orElse(0L);
+        return PageableExecutionUtils.getPage(content, pageable, () -> totalCount);
     }
 
     public ItemDetailResponseDto getItemDetail(Long itemId) {
