@@ -7,6 +7,7 @@ import com.hello.ecommerceorderplatform.user.dto.LoginRequestDto;
 import com.hello.ecommerceorderplatform.user.dto.UserRegisterRequestDto;
 import com.hello.ecommerceorderplatform.user.dto.UserResponseDto;
 import com.hello.ecommerceorderplatform.user.repository.UserRepository;
+import com.hello.ecommerceorderplatform.user.repository.UserRepositoryImpl;
 import com.hello.ecommerceorderplatform.user.security.JwtUtil;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.transaction.Transactional;
@@ -26,7 +27,9 @@ import org.springframework.stereotype.Service;
 public class UserService {
     private static int authNum;
 
-    private final UserRepository  userRepository;
+    private final UserRepository     userRepository;
+    private final UserRepositoryImpl userRepositoryImpl;
+
     private final PasswordEncoder passwordEncoder;
     private final JavaMailSender  mailSender;
     private final JwtUtil         jwtUtil;
@@ -52,10 +55,10 @@ public class UserService {
         String phone    = passwordEncoder.encode(userRegisterRequestDto.getPhoneNumber());
         String address  = passwordEncoder.encode(userRegisterRequestDto.getAddress());
 
-        if (userRepository.existsUserByUsername(username)) {
+        if (userRepositoryImpl.existsUserByUsername(username)) {
             throw new IllegalArgumentException("이미 존재하는 ID 입니다");
         }
-        if (userRepository.existsUserByEmail(email)) {
+        if (userRepositoryImpl.existsUserByEmail(email)) {
             throw new IllegalArgumentException("이미 존재하는 EMAIL 입니다");
         }
         sendVerificationEmail(userRegisterRequestDto.getEmail());
@@ -117,7 +120,7 @@ public class UserService {
         String username = requestDto.getUsername();
         String password = requestDto.getPassword();
 
-        User user = userRepository.findByUsername(username)
+        User user = userRepositoryImpl.findByUsername(username)
                 .orElseThrow(() -> new IllegalArgumentException("등록된 사용자가 없습니다"));
 
         if (passwordEncoder.matches(passwordEncoder.encode(password), user.getPassword())) {

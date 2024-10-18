@@ -2,8 +2,8 @@ package com.hello.ecommerceorderplatform.config;
 
 import com.hello.ecommerceorderplatform.user.security.JwtUtil;
 import com.hello.ecommerceorderplatform.user.security.UserDetailsServiceImpl;
-import com.hello.ecommerceorderplatform.user.service.UserService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.boot.autoconfigure.security.servlet.PathRequest;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -16,7 +16,7 @@ import org.springframework.security.web.SecurityFilterChain;
 @Configuration
 @EnableWebSecurity
 @RequiredArgsConstructor
-public class SecurityConfig {
+public class WebSecurityConfig {
 
     private final JwtUtil                     jwtUtil;
     private final AuthenticationConfiguration authenticationConfiguration;
@@ -36,7 +36,10 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http.csrf(csrf -> csrf.disable());
-        http.authorizeHttpRequests(auth -> auth.requestMatchers("/api/users/**")
+        http.authorizeHttpRequests(auth -> auth.requestMatchers(PathRequest.toStaticResources()
+                        .atCommonLocations())
+                .permitAll() // resource
+                .requestMatchers("/api/users/**")
                 .permitAll()
                 .anyRequest()
                 .authenticated());

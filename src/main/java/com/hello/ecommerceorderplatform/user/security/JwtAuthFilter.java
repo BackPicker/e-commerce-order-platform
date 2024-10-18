@@ -1,13 +1,12 @@
 package com.hello.ecommerceorderplatform.user.security;
 
 import com.hello.ecommerceorderplatform.user.domain.User;
-import com.hello.ecommerceorderplatform.user.repository.UserRepository;
+import com.hello.ecommerceorderplatform.user.repository.UserRepositoryImpl;
 import io.jsonwebtoken.Claims;
 import jakarta.servlet.*;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Component;
 import org.springframework.util.PatternMatchUtils;
 import org.springframework.util.StringUtils;
 
@@ -15,14 +14,14 @@ import java.io.IOException;
 
 
 @Slf4j(topic = "AuthFilter")
-@Component
+// @Component
 @RequiredArgsConstructor
 public class JwtAuthFilter implements Filter {
 
     private static final String[] whitelist = {"/", "/api/users/signup", "/api/users/login", "/api/users/logout", " / css/*", "/js/*"};
 
-    private final UserRepository userRepository;
-    private final JwtUtil        jwtUtil;
+    private final UserRepositoryImpl userRepository;
+    private final JwtUtil            jwtUtil;
 
 
     @Override
