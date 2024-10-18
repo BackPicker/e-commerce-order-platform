@@ -2,17 +2,20 @@ package com.hello.ecommerceorderplatform.user.domain;
 
 
 import jakarta.persistence.*;
-import lombok.*;
+import lombok.AccessLevel;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 @Entity
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-@ToString
+@Table(name = "users")
 public class User {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;          // 회원 ID
+    private Long id;
 
     @Column(nullable = false, unique = true)
     private String username; // 회원 아이디
@@ -21,7 +24,7 @@ public class User {
     private String password; // 회원 비밀번호 (암호화 저장)
 
     @Column(nullable = false)
-    private String phoneNumber;
+    private String phoneNumber; // 전화번호
 
     @Column(nullable = false, unique = true)
     private String email; // 회원 이메일
@@ -31,13 +34,12 @@ public class User {
 
     @Column(nullable = false)
     @Enumerated(EnumType.STRING)
-    public UserRoleEnum userRoleEnum;
+    private UserRoleEnum userRoleEnum;
 
-/*
+    /*
     @OneToMany(mappedBy = "user", fetch = FetchType.LAZY)
     private List<Order> orders = new ArrayList<>();
-*/
-
+    */
 
     @Builder
     public User(String username, String password, String phoneNumber, String email, String address, UserRoleEnum userRoleEnum) {
@@ -48,7 +50,5 @@ public class User {
         this.address      = address;
         this.userRoleEnum = userRoleEnum;
     }
-
-
 }
 

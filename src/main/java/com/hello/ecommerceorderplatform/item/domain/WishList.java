@@ -1,10 +1,8 @@
 package com.hello.ecommerceorderplatform.item.domain;
 
 
-import com.hello.ecommerceorderplatform.item.domain.Item;
 import com.hello.ecommerceorderplatform.user.domain.User;
 import jakarta.persistence.*;
-import jakarta.validation.constraints.NotNull;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -29,7 +27,7 @@ public class WishList {
     private List<Item> items = new ArrayList<>();
 
     @ManyToOne(fetch = LAZY)
-    @JoinColumn(name = "member_id")
+    @JoinColumn(name = "users_id")
     private User user;  // 위시리스트 회원
 
     @CreatedDate

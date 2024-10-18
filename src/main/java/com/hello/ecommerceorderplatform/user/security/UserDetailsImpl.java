@@ -1,6 +1,7 @@
 package com.hello.ecommerceorderplatform.user.security;
 
 import com.hello.ecommerceorderplatform.user.domain.User;
+import com.hello.ecommerceorderplatform.user.domain.UserRoleEnum;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -22,12 +23,14 @@ public class UserDetailsImpl implements UserDetails {
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        Collection<GrantedAuthority> authorities = new ArrayList<>();
-        authorities.add(new SimpleGrantedAuthority(user.getUserRoleEnum()
-                .getAuthority()));
-
+        UserRoleEnum                 role                   = user.getUserRoleEnum();
+        String                       authority              = role.getAuthority();
+        SimpleGrantedAuthority       simpleGrantedAuthority = new SimpleGrantedAuthority(authority);
+        Collection<GrantedAuthority> authorities            = new ArrayList<>();
+        authorities.add(simpleGrantedAuthority);
         return authorities;
     }
+
 
     @Override
     public String getPassword() {

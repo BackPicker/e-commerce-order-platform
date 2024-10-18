@@ -47,6 +47,7 @@ public class UserService {
      * @param userRegisterRequestDto
      * @return
      */
+    @Transactional
     public ResponseEntity<UserResponseDto> createMember(UserRegisterRequestDto userRegisterRequestDto) {
         log.info("userRegisterRequestDto: {}", userRegisterRequestDto);
         String username = userRegisterRequestDto.getUsername();
@@ -71,20 +72,12 @@ public class UserService {
             role = UserRoleEnum.ADMIN;
         }
 
-        User build = User.builder()
-                .username(username)
-                .password(password)
-                .phoneNumber(phone)
-                .email(email)
-                .address(address)
-                .userRoleEnum(role)
-                .build();
-
-        userRepository.save(build);
+        User user = new User(username, password, phone, email, address, role);
+        userRepository.save(user);
 
 
         return ResponseEntity.status(HttpStatus.CREATED)
-                .body(new UserResponseDto(build));
+                .body(new UserResponseDto(user));
     }
 
     /**
@@ -94,7 +87,6 @@ public class UserService {
      */
 
     private void sendVerificationEmail(String emailParam) {
-        log.info("emailParam = {}", emailParam);
         SimpleMailMessage email = new SimpleMailMessage();
         createNumber();
 

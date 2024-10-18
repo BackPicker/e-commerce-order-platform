@@ -41,6 +41,8 @@ public class WebSecurityConfig {
                 .permitAll() // resource
                 .requestMatchers("/api/users/**")
                 .permitAll()
+                .requestMatchers("/api/items/**")
+                .permitAll()
                 .anyRequest()
                 .authenticated());
 
