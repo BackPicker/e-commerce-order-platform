@@ -7,7 +7,6 @@ import com.querydsl.jpa.impl.JPAQueryFactory;
 import jakarta.persistence.EntityManager;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.support.PageableExecutionUtils;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -38,7 +37,8 @@ public class ItemRepositorympl {
                         .where(itemNameCheck(searchCondition.getItemName()), itemQuantityLoeCheck(searchCondition.getItemQuantityLoe()), itemPriceLoeCheck(searchCondition.getItemPriceLoe()), itemPriceGoeCheck(searchCondition.getItemPriceGoe()))
                         .fetchOne())
                 .orElse(0L);
-        return PageableExecutionUtils.getPage(content, pageable, () -> totalCount);
+        return new CustomPageImpl<>(content, pageable, totalCount);
+        // return PageableExecutionUtils.getPage(content, pageable, () -> totalCount);
     }
 
     public ItemDetailResponseDto getItemDetail(Long itemId) {
