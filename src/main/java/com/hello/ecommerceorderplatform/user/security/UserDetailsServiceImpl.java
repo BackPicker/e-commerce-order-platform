@@ -2,26 +2,25 @@ package com.hello.ecommerceorderplatform.user.security;
 
 import com.hello.ecommerceorderplatform.user.domain.User;
 import com.hello.ecommerceorderplatform.user.repository.UserRepositoryImpl;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
+@Slf4j
 @Service
+@RequiredArgsConstructor
 public class UserDetailsServiceImpl implements UserDetailsService {
 
     private final UserRepositoryImpl userRepository;
-
-    public UserDetailsServiceImpl(UserRepositoryImpl userRepository) {
-        this.userRepository = userRepository;
-    }
 
 
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
         User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new UsernameNotFoundException(username + " 을 찾을 수 없습니다"));
-
 
         return new UserDetailsImpl(user);
     }

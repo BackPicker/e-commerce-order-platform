@@ -7,17 +7,17 @@ import lombok.Getter;
 @Getter
 public class UserResponseDto {
 
-    private String       username;
-    private String       email;
-    private String       address;
-    private String       phoneNumber;
-    private UserRoleEnum userRole;
+    private final String       username;
+    private final String       email;
+    private final String       address;
+    private final String       phoneNumber;
+    private final UserRoleEnum userRole;
 
     public UserResponseDto(User user) {
         this.username    = user.getUsername();
         this.email       = user.getEmail();
         this.address     = user.getAddress();
         this.phoneNumber = user.getPhoneNumber();
-        this.userRole    = user.getUserRoleEnum();
+        this.userRole = user.getRole();
     }
 }

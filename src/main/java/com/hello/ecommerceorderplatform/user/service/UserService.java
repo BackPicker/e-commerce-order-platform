@@ -3,12 +3,11 @@ package com.hello.ecommerceorderplatform.user.service;
 
 import com.hello.ecommerceorderplatform.user.domain.User;
 import com.hello.ecommerceorderplatform.user.domain.UserRoleEnum;
-import com.hello.ecommerceorderplatform.user.dto.LoginRequestDto;
 import com.hello.ecommerceorderplatform.user.dto.UserRegisterRequestDto;
 import com.hello.ecommerceorderplatform.user.dto.UserResponseDto;
+import com.hello.ecommerceorderplatform.user.jwt.JwtUtil;
 import com.hello.ecommerceorderplatform.user.repository.UserRepository;
 import com.hello.ecommerceorderplatform.user.repository.UserRepositoryImpl;
-import com.hello.ecommerceorderplatform.user.security.JwtUtil;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -40,6 +39,13 @@ public class UserService {
 
     @Value("${ADMIN_ADDRESS}}")
     private String ADMIN_ADDRESS;
+
+    /**
+     * 메일 보내기 -> 랜덤 숫자 생성
+     */
+    public static void createNumber() {
+        authNum = (int) (Math.random() * (900000)) + 1000000;
+    }
 
     /**
      * 회원가입
@@ -98,15 +104,7 @@ public class UserService {
         email.setText(message);
         mailSender.send(email);
     }
-
-    /**
-     * 메일 보내기 -> 랜덤 숫자 생성
-     */
-    public static void createNumber() {
-        authNum = (int) (Math.random() * (900000)) + 1000000;
-    }
-
-
+/*
     @Transactional
     public String login(LoginRequestDto requestDto, HttpServletResponse res) {
         String username = requestDto.getUsername();
@@ -123,7 +121,7 @@ public class UserService {
         jwtUtil.addJwtToCookie(token, res);
 
         return token;
-    }
+    } */
 
     public void logout(HttpServletResponse response) {
         jwtUtil.addJwtToCookie("", response);

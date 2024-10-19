@@ -34,7 +34,7 @@ public class Item {
     private String description; // 상품 설명
 
     @CreatedDate
-    private LocalDateTime createdAt = LocalDateTime.now();    // 수량 등록일
+    private final LocalDateTime createdAt = LocalDateTime.now();    // 수량 등록일
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "wishList_id")

@@ -2,14 +2,12 @@ package com.hello.ecommerceorderplatform.user.domain;
 
 
 import jakarta.persistence.*;
-import lombok.AccessLevel;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 @Entity
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
+@ToString
 @Table(name = "users")
 public class User {
 
@@ -34,7 +32,7 @@ public class User {
 
     @Column(nullable = false)
     @Enumerated(EnumType.STRING)
-    private UserRoleEnum userRoleEnum;
+    private UserRoleEnum role;
 
     /*
     @OneToMany(mappedBy = "user", fetch = FetchType.LAZY)
@@ -42,13 +40,13 @@ public class User {
     */
 
     @Builder
-    public User(String username, String password, String phoneNumber, String email, String address, UserRoleEnum userRoleEnum) {
-        this.username     = username;
-        this.password     = password;
-        this.phoneNumber  = phoneNumber;
-        this.email        = email;
-        this.address      = address;
-        this.userRoleEnum = userRoleEnum;
+    public User(String username, String password, String phoneNumber, String email, String address, UserRoleEnum role) {
+        this.username    = username;
+        this.password    = password;
+        this.phoneNumber = phoneNumber;
+        this.email       = email;
+        this.address     = address;
+        this.role        = role;
     }
 }
 

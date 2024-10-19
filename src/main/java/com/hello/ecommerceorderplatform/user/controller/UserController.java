@@ -1,8 +1,6 @@
 package com.hello.ecommerceorderplatform.user.controller;
 
 
-import com.hello.ecommerceorderplatform.user.dto.LoginRequestDto;
-import com.hello.ecommerceorderplatform.user.dto.LoginResponseDto;
 import com.hello.ecommerceorderplatform.user.dto.UserRegisterRequestDto;
 import com.hello.ecommerceorderplatform.user.dto.UserResponseDto;
 import com.hello.ecommerceorderplatform.user.service.UserService;
@@ -22,7 +20,7 @@ import java.util.List;
 
 @Slf4j
 @RestController
-@RequestMapping("/api/users")
+@RequestMapping("/api/user")
 @RequiredArgsConstructor
 public class UserController {
 
@@ -30,7 +28,9 @@ public class UserController {
 
     @PostMapping("/signup")
     public ResponseEntity<UserResponseDto> createMember(
-            @Valid @RequestBody UserRegisterRequestDto userRegisterRequestDto, BindingResult bindingResult) {
+            @Valid
+            @RequestBody
+            UserRegisterRequestDto userRegisterRequestDto, BindingResult bindingResult) {
         List<FieldError> fieldErrors = bindingResult.getFieldErrors();
         if (!fieldErrors.isEmpty()) {
             for (FieldError fieldError : fieldErrors) {
@@ -42,11 +42,9 @@ public class UserController {
         return userService.createMember(userRegisterRequestDto);
     }
 
-    @PostMapping("/login")
-    public ResponseEntity<LoginResponseDto> login(@RequestBody LoginRequestDto requestDto, HttpServletResponse res) {
-        String username = userService.login(requestDto, res);
-        return ResponseEntity.ok(new LoginResponseDto(username));
-    }
+    /**
+     * 로그인
+     */
 
     /**
      * 로그아웃

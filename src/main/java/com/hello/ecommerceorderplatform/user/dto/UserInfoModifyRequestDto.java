@@ -5,8 +5,8 @@ import lombok.Getter;
 @Getter
 public class UserInfoModifyRequestDto {
 
-    private String phoneNumber;
-    private String address;
+    private final String phoneNumber;
+    private final String address;
 
     public UserInfoModifyRequestDto(String phoneNumber, String address) {
         this.phoneNumber = phoneNumber;

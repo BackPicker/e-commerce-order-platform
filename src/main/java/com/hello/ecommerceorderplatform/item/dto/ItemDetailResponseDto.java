@@ -6,11 +6,11 @@ import lombok.Getter;
 
 @Getter
 public class ItemDetailResponseDto {
-    private String itemName;
-    private String category;
-    private int    price;
-    private int    quantity;
-    private String description; // 상품 설명 추가
+    private final String itemName;
+    private final String category;
+    private final int    price;
+    private final int    quantity;
+    private final String description; // 상품 설명 추가
 
     @QueryProjection
     public ItemDetailResponseDto(String itemName, String category, int price, int quantity, String description) {

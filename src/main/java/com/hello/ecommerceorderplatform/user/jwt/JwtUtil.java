@@ -1,4 +1,4 @@
-package com.hello.ecommerceorderplatform.user.security;
+package com.hello.ecommerceorderplatform.user.jwt;
 
 import com.hello.ecommerceorderplatform.user.domain.UserRoleEnum;
 import io.jsonwebtoken.*;
@@ -12,9 +12,9 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
-import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.security.Key;
 import java.util.Base64;
 import java.util.Date;
@@ -23,19 +23,17 @@ import java.util.Date;
 @Component
 public class JwtUtil {
     // Header KEY 값
-    public static final String AUTHORIZATION_HEADER = "Authorization";
+    public static final String             AUTHORIZATION_HEADER = "Authorization";
     // 사용자 권한 값의 KEY
-    public static final String AUTHORIZATION_KEY    = "auth";
+    public static final String             AUTHORIZATION_KEY    = "auth";
     // Token 식별자
-    public static final String BEARER_PREFIX        = "Bearer ";
+    public static final String             BEARER_PREFIX        = "Bearer ";
     // 토큰 만료시간
-    private final       long   TOKEN_TIME           = 60 * 60 * 1000L; // 60분
-
+    private final       long               TOKEN_TIME           = 60 * 60 * 1000L; // 60분
+    private final       SignatureAlgorithm signatureAlgorithm   = SignatureAlgorithm.HS256;
     @Value("${JWT_SECRET_KEY}") // Base64 Encode 한 SecretKey
-    private       String             secretKey;
-    private       Key                key;
-    private final SignatureAlgorithm signatureAlgorithm = SignatureAlgorithm.HS256;
-
+    private             String             secretKey;
+    private             Key                key;
 
     @PostConstruct
     public void init() {
@@ -68,18 +66,14 @@ public class JwtUtil {
 
     // JWT Cookie 에 저장
     public void addJwtToCookie(String token, HttpServletResponse res) {
-        try {
-            token = URLEncoder.encode(token, "utf-8")
-                    .replaceAll("\\+", "%20"); // Cookie Value 에는 공백이 불가능해서 encoding 진행
+        token = URLEncoder.encode(token, StandardCharsets.UTF_8)
+                .replaceAll("\\+", "%20"); // Cookie Value 에는 공백이 불가능해서 encoding 진행
 
-            Cookie cookie = new Cookie(AUTHORIZATION_HEADER, token); // Name-Value
-            cookie.setPath("/");
+        Cookie cookie = new Cookie(AUTHORIZATION_HEADER, token); // Name-Value
+        cookie.setPath("/");
 
-            // Response 객체에 Cookie 추가
-            res.addCookie(cookie);
-        } catch (UnsupportedEncodingException e) {
-            log.error(e.getMessage());
-        }
+        // Response 객체에 Cookie 추가
+        res.addCookie(cookie);
     }
 
     // JWT 토큰 substring
@@ -127,11 +121,7 @@ public class JwtUtil {
             for (Cookie cookie : cookies) {
                 if (cookie.getName()
                         .equals(AUTHORIZATION_HEADER)) {
-                    try {
-                        return URLDecoder.decode(cookie.getValue(), "UTF-8"); // Encode 되어 넘어간 Value 다시 Decode
-                    } catch (UnsupportedEncodingException e) {
-                        return null;
-                    }
+                    return URLDecoder.decode(cookie.getValue(), StandardCharsets.UTF_8); // Encode 되어 넘어간 Value 다시 Decode
                 }
             }
         }
