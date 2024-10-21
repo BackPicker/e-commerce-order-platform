@@ -15,16 +15,28 @@ import java.util.Optional;
 import static com.hello.ecommerceorderplatform.item.domain.QItem.item;
 
 @Repository
-public class ItemRepositorympl {
+public class ItemRepositoryImpl {
 
     private final JPAQueryFactory factory;
 
-    public ItemRepositorympl(EntityManager entityManager) {
+    public ItemRepositoryImpl(EntityManager entityManager) {
         this.factory = new JPAQueryFactory(entityManager);
     }
 
-    public Page<ItemResponseDto> itemList(ItemSearchCondition searchCondition, Pageable pageable) {
+    /**
+     * item 수량 확인
+     */
+    public boolean existByItemName(String itemName) {
+        return !factory.selectFrom(item)
+                .where(item.itemName.eq(itemName))
+                .fetch()
+                .isEmpty();
+    }
 
+    /**
+     * ItemList 확인
+     */
+    public Page<ItemResponseDto> itemList(ItemSearchCondition searchCondition, Pageable pageable) {
         List<ItemResponseDto> content = factory.select(new QItemResponseDto(item.itemName, item.category, item.price, item.quantity))
                 .from(item)
                 .where(itemNameCheck(searchCondition.getItemName()), itemQuantityLoeCheck(searchCondition.getItemQuantityLoe()), itemPriceLoeCheck(searchCondition.getItemPriceLoe()), itemPriceGoeCheck(searchCondition.getItemPriceGoe()))
@@ -38,14 +50,13 @@ public class ItemRepositorympl {
                         .fetchOne())
                 .orElse(0L);
         return new CustomPageImpl<>(content, pageable, totalCount);
-        // return PageableExecutionUtils.getPage(content, pageable, () -> totalCount);
     }
 
-    public ItemListResponseDto getItemDetail(Long itemId) {
-        return factory.select(new QItemListResponseDto(item.itemName, item.category, item.price, item.quantity, item.description)) // description 추가
+    public Optional<ItemDetailResponseDto> getItemDetail(Long itemId) {
+        return Optional.ofNullable(factory.select(new QItemDetailResponseDto(item.itemName, item.category, item.price, item.quantity, item.description))
                 .from(item)
                 .where(item.id.eq(itemId))
-                .fetchOne();
+                .fetchOne());
     }
 
     private BooleanExpression itemNameCheck(String itemName) {
