@@ -1,7 +1,7 @@
 package com.hello.ecommerceorderplatform.item.controller;
 
 
-import com.hello.ecommerceorderplatform.item.dto.ItemDetailResponseDto;
+import com.hello.ecommerceorderplatform.item.dto.ItemListResponseDto;
 import com.hello.ecommerceorderplatform.item.dto.ItemResponseDto;
 import com.hello.ecommerceorderplatform.item.dto.ItemSearchCondition;
 import com.hello.ecommerceorderplatform.item.service.ItemService;
@@ -20,6 +20,12 @@ public class ItemController {
 
     private final ItemService itemService;
 
+    /**
+     * 상품 등록
+     */
+    public void itemSave() {
+
+    }
 
     /**
      * 등록되어 있는 상품의 리스트를 보여줌
@@ -34,7 +40,9 @@ public class ItemController {
      * 상품 클릭 시 상세 정보를 제공해야 한다
      */
     @GetMapping("/{itemId}")
-    public ItemDetailResponseDto getItemDetail(@PathVariable Long itemId) {
+    public ItemListResponseDto getItemDetail(
+            @PathVariable
+            Long itemId) {
         return itemService.getItemDetail(itemId);
     }
 

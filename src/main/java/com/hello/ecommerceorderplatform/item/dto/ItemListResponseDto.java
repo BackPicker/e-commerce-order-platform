@@ -5,7 +5,7 @@ import com.querydsl.core.annotations.QueryProjection;
 import lombok.Getter;
 
 @Getter
-public class ItemDetailResponseDto {
+public class ItemListResponseDto {
     private final String itemName;
     private final String category;
     private final int    price;
@@ -13,7 +13,7 @@ public class ItemDetailResponseDto {
     private final String description; // 상품 설명 추가
 
     @QueryProjection
-    public ItemDetailResponseDto(String itemName, String category, int price, int quantity, String description) {
+    public ItemListResponseDto(String itemName, String category, int price, int quantity, String description) {
         this.itemName    = itemName;
         this.category    = category;
         this.price       = price;

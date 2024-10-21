@@ -41,8 +41,8 @@ public class ItemRepositorympl {
         // return PageableExecutionUtils.getPage(content, pageable, () -> totalCount);
     }
 
-    public ItemDetailResponseDto getItemDetail(Long itemId) {
-        return factory.select(new QItemDetailResponseDto(item.itemName, item.category, item.price, item.quantity, item.description)) // description 추가
+    public ItemListResponseDto getItemDetail(Long itemId) {
+        return factory.select(new QItemListResponseDto(item.itemName, item.category, item.price, item.quantity, item.description)) // description 추가
                 .from(item)
                 .where(item.id.eq(itemId))
                 .fetchOne();

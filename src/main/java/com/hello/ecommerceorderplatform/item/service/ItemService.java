@@ -1,7 +1,7 @@
 package com.hello.ecommerceorderplatform.item.service;
 
 
-import com.hello.ecommerceorderplatform.item.dto.ItemDetailResponseDto;
+import com.hello.ecommerceorderplatform.item.dto.ItemListResponseDto;
 import com.hello.ecommerceorderplatform.item.dto.ItemResponseDto;
 import com.hello.ecommerceorderplatform.item.dto.ItemSearchCondition;
 import com.hello.ecommerceorderplatform.item.repository.ItemRepositorympl;
@@ -23,7 +23,7 @@ public class ItemService {
         return itemRepositorympl.itemList(searchCondition, pageable);
     }
 
-    public ItemDetailResponseDto getItemDetail(Long itemId) {
+    public ItemListResponseDto getItemDetail(Long itemId) {
         return itemRepositorympl.getItemDetail(itemId);
     }
 }
