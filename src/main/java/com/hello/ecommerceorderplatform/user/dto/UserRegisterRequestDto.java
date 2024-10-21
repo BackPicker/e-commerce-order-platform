@@ -13,7 +13,6 @@ import lombok.ToString;
 @ToString
 public class UserRegisterRequestDto {
 
-    @Pattern(regexp = "^(?=.*[0-9])(?=.*[a-zA-Z]).{5,}$")
     private String username;
 
     @Pattern(regexp = "^(?=.*[0-9])(?=.*[a-zA-Z])(?=.*[@#$%^&+=!]).{4,}$")
