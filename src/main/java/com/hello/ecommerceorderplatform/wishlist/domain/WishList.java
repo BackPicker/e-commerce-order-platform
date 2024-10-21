@@ -1,6 +1,5 @@
 package com.hello.ecommerceorderplatform.wishlist.domain;
 
-
 import com.hello.ecommerceorderplatform.user.domain.User;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
@@ -21,15 +20,32 @@ public class WishList {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;    // 위시리스트 Id
+    private Long id; // 위시리스트 Id
 
     @OneToOne(fetch = LAZY)
-    @JoinColumn(name = "users_id")
-    private User user;  // 위시리스트 회원
+    @JoinColumn(name = "user_id", nullable = false)
+    private User user; // 위시리스트 회원
 
-    @OneToMany(mappedBy = "wishList", cascade = CascadeType.REMOVE)
-    private List<WishListItem> wishListItemList = new ArrayList<>();
+    @OneToMany(mappedBy = "wishList", fetch = LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<WishListItem> wishListItemList = new ArrayList<>(); // 위시리스트 아이템 리스트
 
     @CreatedDate
-    private LocalDateTime createdAt;    // 위시리스트 생성일
+    private LocalDateTime createdAt; // 위시리스트 생성일
+
+    public WishList(User user) {
+        this.user      = user;
+        this.createdAt = LocalDateTime.now();
+    }
+
+    public void addWishListItem(WishListItem wishListItem) {
+        if (!wishListItemList.contains(wishListItem)) {
+            wishListItemList.add(wishListItem);
+            wishListItem.setWishList(this); // 연관관계 설정
+        }
+    }
+
+    public void removeWishListItem(WishListItem wishListItem) {
+        wishListItemList.remove(wishListItem);
+        wishListItem.setWishList(null); // 연관관계 정리
+    }
 }

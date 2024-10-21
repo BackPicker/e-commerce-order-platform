@@ -28,6 +28,7 @@ public class ItemService {
     /**
      * 상품 등록
      */
+    @Transactional
     @CacheEvict(value = "Items", allEntries = true, cacheManager = "cacheManager")
     public void saveItem(ItemRequestDto saveRequestDto) {
         if (itemRepositoryImpl.existByItemName(saveRequestDto.getItemName())) {
@@ -50,7 +51,7 @@ public class ItemService {
      * 상품 상세 조회
      */
     @Transactional
-    @Cacheable(cacheNames = "getItemDetail", key = "'item:itemNo:' + #itemId")
+    @Cacheable(cacheNames = "getItemDetail", key = "'item:itemNo:' + #itemId", cacheManager = "cacheManager")
     public ItemDetailResponseDto getItemDetail(Long itemId) {
         return itemRepositoryImpl.getItemDetail(itemId)
                 .orElseThrow(() -> new NoSuchElementException("Item Not Found"));

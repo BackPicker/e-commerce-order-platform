@@ -3,13 +3,11 @@ package com.hello.ecommerceorderplatform.user.domain;
 
 import com.hello.ecommerceorderplatform.wishlist.domain.WishList;
 import jakarta.persistence.*;
-import lombok.AccessLevel;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 @Entity
 @Getter
+@ToString
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Table(name = "users")
 public class User {
@@ -22,7 +20,7 @@ public class User {
     private String username; // 회원 아이디
 
     @Column(nullable = false)
-    private String password; // 회원 비밀번호 (암호화 저장)
+    private String password; // 회원 비밀번호
 
     @Column(nullable = false)
     private String phoneNumber; // 전화번호
@@ -39,11 +37,6 @@ public class User {
 
     @OneToOne(mappedBy = "user")
     private WishList wishList;
-
-    /*
-    @OneToMany(mappedBy = "user", fetch = FetchType.LAZY)
-    private List<Order> orders = new ArrayList<>();
-    */
 
     @Builder
     public User(String username, String password, String phoneNumber, String email, String address, UserRoleEnum role) {

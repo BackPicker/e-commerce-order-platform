@@ -2,6 +2,7 @@ package com.hello.ecommerceorderplatform.item.domain;
 
 
 import com.hello.ecommerceorderplatform.item.dto.ItemRequestDto;
+import com.hello.ecommerceorderplatform.item.exception.NosuchQuantityException;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -56,7 +57,16 @@ public class Item {
         this.description = itemRequestDto.getDescription();
     }
 
-    public void addItemQuantity(int quantity) {
-        this.itemName += quantity;
+    public void addQuantity(int quantity) {
+        this.quantity += quantity;
+    }
+
+    public void removeQuantity(int orderCount) {
+        int totalCount = this.quantity - orderCount;
+        if (totalCount < 0) {
+            throw new NosuchQuantityException("재고가 부족합니다");
+        }
+        this.quantity = totalCount;
+
     }
 }
