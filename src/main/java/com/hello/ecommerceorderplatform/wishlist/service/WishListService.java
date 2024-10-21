@@ -17,6 +17,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
+import java.util.NoSuchElementException;
+
 @Slf4j
 @Service
 @RequiredArgsConstructor
@@ -43,7 +45,8 @@ public class WishListService {
             wishListRepository.save(wishList);
             return wishList;
         } else {
-            return wishListRepository.findByUser(user);
+            return wishListRepositoryImpl.findByUserId(user.getId())
+                    .orElseThrow(() -> new NoSuchElementException("회원을 찾을 수 없습니다"));
         }
     }
 

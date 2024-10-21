@@ -30,6 +30,8 @@ public class WishListRepositoryImpl {
     public Optional<WishList> findByUserId(Long userId) {
         log.info("findByUserId 쿼리 실행");
         return Optional.ofNullable(factory.selectFrom(wishList)
+                .leftJoin(wishList.wishListItemList)
+                .fetchJoin()
                 .where(wishList.user.id.eq(userId))
                 .fetchOne());
     }

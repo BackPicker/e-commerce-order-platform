@@ -27,12 +27,12 @@ public class ItemRepositoryImpl {
      * item 수량 확인
      */
     public boolean existByItemName(String itemName) {
-        return !factory.selectFrom(item)
+        Long count = factory.select(item.count())
+                .from(item)
                 .where(item.itemName.eq(itemName))
-                .fetch()
-                .isEmpty();
+                .fetchOne();
+        return count != null && count > 0;
     }
-
     /**
      * ItemList 확인
      */

@@ -49,6 +49,12 @@ public class Order {
     @Enumerated(EnumType.STRING)
     private OrderStatus orderStatus;
 
+    public Order(OrderStatus orderStatus, LocalDateTime orderDate, User user) {
+        this.orderStatus = orderStatus;
+        this.orderDate   = orderDate;
+        this.user        = user;
+    }
+
     public static Order createOrder(User user, List<OrderItem> orderItems) {
         Order order = new Order(OrderStatus.ORDER, LocalDateTime.now(), user);
         for (OrderItem orderItem : orderItems) {
@@ -60,11 +66,5 @@ public class Order {
     public void addOrderItem(OrderItem orderItem) {
         orderItems.add(orderItem);
         orderItem.setOrder(this);
-    }
-
-    public Order(OrderStatus orderStatus, LocalDateTime orderDate, User user) {
-        this.orderStatus = orderStatus;
-        this.orderDate   = orderDate;
-        this.user        = user;
     }
 }

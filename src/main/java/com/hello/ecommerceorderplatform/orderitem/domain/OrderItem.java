@@ -33,6 +33,12 @@ public class OrderItem {
     @Column(nullable = false)
     private int orderCount;     // 주문 수량
 
+    public OrderItem(Item item, int totalPrice, int orderCount) {
+        this.item       = item;
+        this.totalPrice = totalPrice;
+        this.orderCount = orderCount;
+    }
+
     // 주문 아이템 생성 메서드
     public static OrderItem createOrderItem(Item item, int orderCount) {
         if (orderCount <= 0) {
@@ -42,11 +48,5 @@ public class OrderItem {
         OrderItem orderItem  = new OrderItem(item, totalPrice, orderCount);
         item.removeQuantity(orderCount);
         return orderItem;
-    }
-
-    public OrderItem(Item item, int totalPrice, int orderCount) {
-        this.item       = item;
-        this.totalPrice = totalPrice;
-        this.orderCount = orderCount;
     }
 }

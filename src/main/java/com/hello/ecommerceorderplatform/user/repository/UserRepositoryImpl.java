@@ -9,7 +9,6 @@ import java.util.Optional;
 
 import static com.hello.ecommerceorderplatform.user.domain.QUser.user;
 
-
 @Repository
 public class UserRepositoryImpl {
 
@@ -19,23 +18,20 @@ public class UserRepositoryImpl {
         this.factory = new JPAQueryFactory(entityManager);
     }
 
-
     public boolean existsUserByUsername(String username) {
-
-        long count = factory.select(user)
+        Long count = factory.select(user.count())
                 .from(user)
                 .where(user.username.eq(username))
-                .fetch()
-                .size();
-        return count > 0;
+                .fetchOne();
+        return count != null && count > 0;
     }
 
     public boolean existsUserByEmail(String email) {
-        long count = factory.selectFrom(user)
+        Long count = factory.select(user.count())
+                .from(user)
                 .where(user.email.eq(email))
-                .fetch()
-                .size();
-        return count > 0;
+                .fetchOne();
+        return count != null && count > 0;
     }
 
     public Optional<User> findByUsername(String username) {
@@ -43,6 +39,4 @@ public class UserRepositoryImpl {
                 .where(user.username.eq(username))
                 .fetchOne());
     }
-
-
 }
