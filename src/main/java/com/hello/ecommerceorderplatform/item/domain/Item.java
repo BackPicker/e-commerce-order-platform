@@ -36,9 +36,6 @@ public class Item {
     @CreatedDate
     private final LocalDateTime createdAt = LocalDateTime.now();    // 수량 등록일
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "wishList_id")
-    private WishList wishList; // ManyToOne 관계
 
     public Item(String itemName, String category, int price, int quantity, String description) {
         this.itemName    = itemName;

@@ -1,13 +1,16 @@
 package com.hello.ecommerceorderplatform.user.domain;
 
 
+import com.hello.ecommerceorderplatform.wishlist.domain.WishList;
 import jakarta.persistence.*;
-import lombok.*;
+import lombok.AccessLevel;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 @Entity
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-@ToString
 @Table(name = "users")
 public class User {
 
@@ -33,6 +36,9 @@ public class User {
     @Column(nullable = false)
     @Enumerated(EnumType.STRING)
     private UserRoleEnum role;
+
+    @OneToOne(mappedBy = "user")
+    private WishList wishList;
 
     /*
     @OneToMany(mappedBy = "user", fetch = FetchType.LAZY)

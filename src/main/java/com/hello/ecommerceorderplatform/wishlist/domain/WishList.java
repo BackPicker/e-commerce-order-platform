@@ -1,4 +1,4 @@
-package com.hello.ecommerceorderplatform.item.domain;
+package com.hello.ecommerceorderplatform.wishlist.domain;
 
 
 import com.hello.ecommerceorderplatform.user.domain.User;
@@ -23,12 +23,12 @@ public class WishList {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;    // 위시리스트 Id
 
-    @OneToMany(mappedBy = "wishList", fetch = FetchType.LAZY)
-    private List<Item> items = new ArrayList<>();
-
-    @ManyToOne(fetch = LAZY)
+    @OneToOne(fetch = LAZY)
     @JoinColumn(name = "users_id")
     private User user;  // 위시리스트 회원
+
+    @OneToMany(mappedBy = "wishList", cascade = CascadeType.REMOVE)
+    private List<WishListItem> wishListItemList = new ArrayList<>();
 
     @CreatedDate
     private LocalDateTime createdAt;    // 위시리스트 생성일
