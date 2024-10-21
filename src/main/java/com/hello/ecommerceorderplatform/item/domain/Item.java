@@ -1,6 +1,7 @@
 package com.hello.ecommerceorderplatform.item.domain;
 
 
+import com.hello.ecommerceorderplatform.item.dto.ItemRequestDto;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -43,5 +44,25 @@ public class Item {
         this.price       = price;
         this.quantity    = quantity;
         this.description = description;
+    }
+
+    public Item(ItemRequestDto saveRequestDto) {
+        this.itemName    = saveRequestDto.getItemName();
+        this.category    = saveRequestDto.getCategory();
+        this.price       = saveRequestDto.getPrice();
+        this.quantity    = saveRequestDto.getQuantity();
+        this.description = saveRequestDto.getDescription();
+    }
+
+    public void updateItemDetails(ItemRequestDto itemRequestDto) {
+        this.itemName    = itemRequestDto.getItemName();
+        this.category    = itemRequestDto.getCategory();
+        this.price       = itemRequestDto.getPrice();
+        this.quantity    = itemRequestDto.getQuantity();
+        this.description = itemRequestDto.getDescription();
+    }
+
+    public void addItemQuantity(int quantity) {
+        this.itemName += quantity;
     }
 }
