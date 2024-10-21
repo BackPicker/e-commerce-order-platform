@@ -24,7 +24,8 @@ public class CustomPageImpl<T> extends PageImpl<T> {
             @JsonProperty("last") boolean last,
             @JsonProperty("totalPages") int totalPages,
             @JsonProperty("sort") JsonNode sort,
-            @JsonProperty("first") boolean first, @JsonProperty("numberOfElements") int numberOfElements) {
+            @JsonProperty("first") boolean first,
+            @JsonProperty("numberOfElements") int numberOfElements) {
         super(content, PageRequest.of(number, size), totalElements);
     }
 

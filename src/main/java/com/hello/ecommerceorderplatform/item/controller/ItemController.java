@@ -55,7 +55,6 @@ public class ItemController {
     public ResponseEntity<Void> updateItem(
             @PathVariable("itemId") Long itemId,
             @RequestBody
-            @Valid
             ItemRequestDto requestDto) {
         itemService.updateItemDetail(itemId, requestDto);
         return ResponseEntity.noContent()

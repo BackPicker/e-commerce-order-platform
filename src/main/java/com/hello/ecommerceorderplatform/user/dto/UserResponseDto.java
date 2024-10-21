@@ -18,6 +18,6 @@ public class UserResponseDto {
         this.email       = user.getEmail();
         this.address     = user.getAddress();
         this.phoneNumber = user.getPhoneNumber();
-        this.userRole = user.getRole();
+        this.userRole    = user.getRole();
     }
 }

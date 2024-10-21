@@ -123,6 +123,8 @@ public class UserService {
         return token;
     } */
 
+    //Bearer%20eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJhZG1pbkEiLCJhdXRoIjoiQURNSU4iLCJleHAiOjE3Mjk0OTY2NjcsImlhdCI6MTcyOTQ5MzA2N30.Od_rPlhsJ2uUOHK2RZFPDThAwZ6ouh87ocEVmMmYiOM
+
     public void logout(HttpServletResponse response) {
         jwtUtil.addJwtToCookie("", response);
     }

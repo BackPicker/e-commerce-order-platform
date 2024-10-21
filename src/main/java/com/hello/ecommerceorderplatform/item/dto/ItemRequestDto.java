@@ -1,6 +1,8 @@
 package com.hello.ecommerceorderplatform.item.dto;
 
+import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 
 @Getter
@@ -10,12 +12,13 @@ public class ItemRequestDto {
     private String itemName;
     @NotBlank
     private String category;
-    @NotBlank
+    @NotNull
+    @Min(value = 0)
     private int    price;
-    @NotBlank
+    @NotNull
+    @Min(value = 0)
     private int    quantity;
     @NotBlank
     private String description;
-
 
 }
