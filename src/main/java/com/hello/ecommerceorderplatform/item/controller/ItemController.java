@@ -24,18 +24,6 @@ public class ItemController {
 
     private final ItemService itemService;
 
-    // 상품 등록
-    @Secured("ROLE_ADMIN")
-    @PostMapping("/add")
-    public ResponseEntity<Void> saveItem(
-            @RequestBody
-            @Valid
-            ItemRequestDto saveRequestDto) {
-        itemService.saveItem(saveRequestDto);
-        return ResponseEntity.status(HttpStatus.CREATED)
-                .build();
-    }
-
     // 전체 ITEM 목록 조회
     @GetMapping("/list")
     public Page<ItemResponseDto> itemList(ItemSearchCondition searchCondition, Pageable pageable) {
@@ -48,6 +36,19 @@ public class ItemController {
             @PathVariable Long itemId) {
         return itemService.getItemDetail(itemId);
     }
+
+    // 상품 등록
+    @Secured("ROLE_ADMIN")
+    @PostMapping("/add")
+    public ResponseEntity<Void> saveItem(
+            @RequestBody
+            @Valid
+            ItemRequestDto saveRequestDto) {
+        itemService.saveItem(saveRequestDto);
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .build();
+    }
+
 
     // 상품 수정
     @Secured("ROLE_ADMIN")
