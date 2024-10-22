@@ -190,4 +190,35 @@ public class OrderManagerService {
         }
 
     }
+
+    public void orderTimeCheck() {
+        List<Order> orderList = orderRepository.findAll();
+        for (Order order : orderList) {
+            switch (order.getOrderStatus()) {
+                case PAYMENT_COMPLETED:
+                    if (Duration.between(order.getCreatedAt(), LocalDateTime.now())
+                            .toDays() == 1) order.updateOrderStatus(OrderStatus.IN_DELIVERY);
+
+                case IN_DELIVERY:
+                    if (Duration.between(order.getModifiedAt(), LocalDateTime.now())
+                            .toDays() == 1) order.updateOrderStatus(OrderStatus.DELIVERY_COMPLETED);
+
+                case DELIVERY_CANCELED_BY_USER:
+                    if (Duration.between(order.getModifiedAt(), LocalDateTime.now())
+                            .toDays() == 1) {
+                        order.updateOrderStatus(OrderStatus.DELIVERY_CANCELED);
+
+                        List<OrderItem> orderItemList = order.getOrderItems();
+
+                        for (OrderItem orderItem : orderItemList)
+                            itemRepositoryImpl.addItemQuantity(orderItem.getItem()
+                                    .getId(), orderItem.getOrderCount());
+                    }
+                default:
+                    throw new RuntimeException("orderTimeCheck 오류 발생");
+            }
+        }
+
+
+    }
 }

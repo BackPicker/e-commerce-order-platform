@@ -8,7 +8,9 @@ import com.hello.ecommerceorderplatform.user.domain.User;
 import com.hello.ecommerceorderplatform.user.security.UserDetailsImpl;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -78,6 +80,15 @@ public class OrderController {
                 .getAuthentication()
                 .getPrincipal();
         return userDetails.getUser();
+    }
+
+    /**
+     * 주문 시간 확인
+     */
+    @Transactional
+    @Scheduled(cron = "0 0 */3 * * *") //
+    public void orderTimeCheck() {
+        orderManagerService.orderTimeCheck();
     }
 
 

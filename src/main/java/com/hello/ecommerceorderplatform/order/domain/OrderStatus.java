@@ -10,8 +10,9 @@ public enum OrderStatus {
     CANCELED_BY_USER,
     CANCELED_BY_SOLD_OUT,
 
-    //배송중, 배송 완료, 오류에 의한 배송 취소
+    // 배송중, 배송 완료, 유저에 의한 배송 취소, 반품 완료
     IN_DELIVERY,
     DELIVERY_COMPLETED,
-    DELIVERY_CANCELED_BY_ERROR
+    DELIVERY_CANCELED_BY_USER,
+    DELIVERY_CANCELED
 }
