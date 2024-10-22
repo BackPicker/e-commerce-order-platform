@@ -1,8 +1,7 @@
-package com.hello.ecommerceorderplatform.orderitem.domain;
+package com.hello.ecommerceorderplatform.order.domain;
 
 
 import com.hello.ecommerceorderplatform.item.domain.Item;
-import com.hello.ecommerceorderplatform.order.domain.Order;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -39,14 +38,4 @@ public class OrderItem {
         this.orderCount = orderCount;
     }
 
-    // 주문 아이템 생성 메서드
-    public static OrderItem createOrderItem(Item item, int orderCount) {
-        if (orderCount <= 0) {
-            throw new IllegalArgumentException("주문 수량은 1 이상이어야 합니다.");
-        }
-        int       totalPrice = item.getPrice() * orderCount;
-        OrderItem orderItem  = new OrderItem(item, totalPrice, orderCount);
-        item.removeQuantity(orderCount);
-        return orderItem;
-    }
 }
