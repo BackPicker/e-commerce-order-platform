@@ -26,21 +26,24 @@ public class WishListRepositoryImpl {
                 .fetch()
                 .isEmpty();
     }
-
     public Optional<WishList> findByUserId(Long userId) {
         return Optional.ofNullable(factory.selectFrom(wishList)
-                .leftJoin(wishList.wishListItemList)
-                .fetchJoin()
                 .where(wishList.user.id.eq(userId))
                 .fetchOne());
     }
 
 
     public void deleteWishListItem(Long wishListId) {
-        // Q 클래스 인스턴스 생성
-        factory.delete(wishList)
+        long deletedCount = factory.delete(wishList)
                 .where(wishList.id.eq(wishListId))
                 .execute();
+        log.info("ID가 {}인 위시리스트 아이템을 삭제했습니다. 삭제된 개수: {}", wishListId, deletedCount);
+    }
 
+    public void deleteWishList(Long userId) {
+        long deletedCount = factory.delete(wishList)
+                .where(wishList.user.id.eq(userId))
+                .execute();
+        log.info("사용자 ID가 {}인 위시리스트를 삭제했습니다. 삭제된 개수: {}", userId, deletedCount);
     }
 }

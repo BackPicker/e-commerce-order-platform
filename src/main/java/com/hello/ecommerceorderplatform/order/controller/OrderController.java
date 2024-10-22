@@ -21,11 +21,12 @@ import org.springframework.web.bind.annotation.RestController;
 public class OrderController {
 
     private final OrderManagerService orderManagerService;
-    private final OrderService orderService;
+    private final OrderService        orderService;
 
     /**
      * 주문 목록 보기
      */
+
     public void getOrders() {
         User user = getCurrentUser();
         orderService.getOrders(user);
@@ -41,9 +42,6 @@ public class OrderController {
         log.info("user = {}", user);
         return orderManagerService.createOrder(orderRequestDto, user);
     }
-
-
-
 
 
     private User getCurrentUser() {

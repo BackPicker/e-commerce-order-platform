@@ -28,7 +28,7 @@ public class WishListItem {
 
     public WishListItem(Integer wishListItemQuantity, Item item) {
         this.wishListItemQuantity = wishListItemQuantity;
-        this.item = item;
+        this.item                 = item;
     }
 
     public int totalWishListPrice(Item item, Integer wishListItemQuantity) {

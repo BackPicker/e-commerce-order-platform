@@ -36,7 +36,7 @@ public class Delivery {
     }
 
     public Delivery(Address address, DeliveryStatus deliveryStatus) {
-        this.address = address;
+        this.address        = address;
         this.deliveryStatus = deliveryStatus;
     }
 }

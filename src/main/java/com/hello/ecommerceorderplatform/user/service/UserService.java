@@ -57,11 +57,11 @@ public class UserService {
     @Transactional
     public ResponseEntity<UserResponseDto> createMember(UserRegisterRequestDto userRegisterRequestDto) {
         log.info("userRegisterRequestDto: {}", userRegisterRequestDto);
-        String username = userRegisterRequestDto.getUsername();
-        String password = passwordEncoder.encode(userRegisterRequestDto.getPassword());
-        String email    = passwordEncoder.encode(userRegisterRequestDto.getEmail());
-        String phone    = passwordEncoder.encode(userRegisterRequestDto.getPhoneNumber());
-        Address address = userRegisterRequestDto.getAddress();
+        String  username = userRegisterRequestDto.getUsername();
+        String  password = passwordEncoder.encode(userRegisterRequestDto.getPassword());
+        String  email    = passwordEncoder.encode(userRegisterRequestDto.getEmail());
+        String  phone    = passwordEncoder.encode(userRegisterRequestDto.getPhoneNumber());
+        Address address  = userRegisterRequestDto.getAddress();
 
         if (userRepositoryImpl.existsUserByUsername(username)) {
             throw new IllegalArgumentException("이미 존재하는 ID 입니다");

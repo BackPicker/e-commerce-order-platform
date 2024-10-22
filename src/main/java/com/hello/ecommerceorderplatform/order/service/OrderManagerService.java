@@ -50,14 +50,14 @@ public class OrderManagerService {
 
         log.info("총 주문금액 지정");
         List<OrderItem> orderItems = new ArrayList<>();
-        int totalPrice = 0;
 
         log.info("orderItems 추가 로직 작동");
-        for (WishListItem wishListItem : wishList.getWishListItemList()) {
+        List<WishListItem> wishListItems = new ArrayList<>(wishList.getWishListItemList());
+
+        for (WishListItem wishListItem : wishListItems) {
             Item    item               = wishListItem.getItem();
             Integer orderCount         = wishListItem.getWishListItemQuantity();
             int     wishListTotalPrice = wishListItem.totalWishListPrice(item, orderCount);
-            totalPrice += wishListTotalPrice;
 
             // 재고 수량 감소 처리
             try {
@@ -71,11 +71,15 @@ public class OrderManagerService {
             orderItemService.save(orderItem);
 
             // 위시리스트 아이템 삭제
+            wishList.removeWishListItem(wishListItem); // 위시리스트에서 아이템 제거
         }
+
+        // 위시리스트 삭제
+        wishListService.removeWishList(user.getId()); // 이 메서드는 위시리스트를 삭제하는 메서드입니다.
 
         // 주문 금액 검증 로직
         int calculatedTotalPrice = orderItems.stream()
-                .mapToInt(OrderItem::getTotalPrice) // 각 OrderItem의 getTotalPrice 호출
+                .mapToInt(OrderItem::getTotalPrice)
                 .sum();
 
         log.info("주문 금액 검증 로직 작동, calculatedTotalPrice = {}, payment = {}", calculatedTotalPrice, orderRequestDto.getPayment());

@@ -22,17 +22,17 @@ public class Item {
     private final LocalDateTime createdAt = LocalDateTime.now();    // 수량 등록일
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;      // 상품 ID
+    private       Long          id;      // 상품 ID
     @Column(nullable = false)
-    private String itemName;    // 상품 이름
+    private       String        itemName;    // 상품 이름
     @Column(nullable = false)
-    private String category;    // 상품 카테고리
+    private       String        category;    // 상품 카테고리
     @Column(nullable = false)
-    private int  price;   // 상품 가격
+    private       int           price;   // 상품 가격
     @Column(nullable = false)
-    private int  quantity;    // 상품 수량
+    private       int           quantity;    // 상품 수량
     @Column(nullable = false)
-    private String description; // 상품 설명
+    private       String        description; // 상품 설명
 
 
     public Item(String itemName, String category, int price, int quantity, String description) {

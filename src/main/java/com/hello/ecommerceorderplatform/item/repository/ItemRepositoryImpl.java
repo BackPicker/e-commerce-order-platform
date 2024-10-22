@@ -33,6 +33,7 @@ public class ItemRepositoryImpl {
                 .fetchOne();
         return count != null && count > 0;
     }
+
     /**
      * ItemList 확인
      */

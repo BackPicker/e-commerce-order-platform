@@ -21,6 +21,7 @@ public class WishListController {
 
     /**
      * 모든 WishList 를 불러온다
+     *
      * @return
      */
     @GetMapping
@@ -43,7 +44,7 @@ public class WishListController {
     }
 
     /**
-     *WishList 를 수정한다
+     * WishList 를 수정한다
      */
     @PutMapping("/{itemId}")
     public void updateWishListItem(
@@ -57,6 +58,7 @@ public class WishListController {
 
     /**
      * WishList 삭제
+     *
      * @param itemId
      */
     @DeleteMapping("/{itemId}")

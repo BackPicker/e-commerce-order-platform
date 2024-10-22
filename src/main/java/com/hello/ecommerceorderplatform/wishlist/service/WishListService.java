@@ -18,6 +18,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
 import java.util.NoSuchElementException;
 
 @Slf4j
@@ -31,7 +32,7 @@ public class WishListService {
     private final WishListItemRepository     wishListItemRepository;
     private final WishListItemRepositoryImpl wishListItemRepositoryImpl;
 
-    private final ItemRepository         itemRepository;
+    private final ItemRepository itemRepository;
 
     @Transactional
     public WishListResponseDto getWishListItems(User user) {
@@ -88,6 +89,7 @@ public class WishListService {
 
     /**
      * WishList 삭제
+     *
      * @param itemId
      */
     @Transactional
@@ -98,6 +100,22 @@ public class WishListService {
         wishListRepository.save(wishList);
     }
 
+    public void removeWishList(Long userId) {
+        // 위시리스트 가져오기
+        WishList wishList = wishListRepositoryImpl.findByUserId(userId)
+                .get();
+
+        // 위시리스트가 존재하면 아이템 삭제
+        if (wishList != null) {
+            // 모든 WishListItem 삭제
+            for (WishListItem wishListItem : new ArrayList<>(wishList.getWishListItemList())) {
+                wishList.removeWishListItem(wishListItem);
+            }
+            // 위시리스트 삭제
+            wishListRepository.delete(wishList);
+        }
+    }
+
     private void validateQuantity(Integer quantity) {
         if (quantity == null || quantity <= 0) {
             throw new InvalidQuantityException("수량은 1 이상이어야 합니다.");
@@ -105,13 +123,25 @@ public class WishListService {
     }
 
     private WishListItem findWishListItem(WishList wishList, Long itemId) {
+        log.info("wishList = {}, itemId = {}", wishList, itemId);
+
+        // 위시리스트 아이템 리스트 출력
+        wishList.getWishListItemList()
+                .forEach(item -> log.info("아이템 ID: {}", item.getItem()
+                        .getId()));
+
         return wishList.getWishListItemList()
                 .stream()
-                .filter(item -> item.getId()
+                .filter(item -> item.getItem()
+                        .getId()
                         .equals(itemId))
                 .findFirst()
-                .orElseThrow(() -> new ItemNotFoundException("아이템을 찾을 수 없습니다."));
+                .orElseThrow(() -> {
+                    log.error("아이템을 찾을 수 없습니다. itemId: {}", itemId);
+                    return new ItemNotFoundException("아이템을 찾을 수 없습니다.");
+                });
     }
+
 
     @Transactional
     public void updateWishListItem(User user, Long itemId, WishListItemDto wishListItemDto) {

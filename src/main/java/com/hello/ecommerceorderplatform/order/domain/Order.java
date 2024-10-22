@@ -47,14 +47,14 @@ public class Order {
 
     public Order(OrderStatus orderStatus, Delivery delivery, LocalDateTime orderDate, User user) {
         this.orderStatus = orderStatus;
-        this.delivery = delivery;
-        this.orderDate = orderDate;
-        this.user      = user;
+        this.delivery    = delivery;
+        this.orderDate   = orderDate;
+        this.user        = user;
     }
 
     public static Order createOrder(User user, Delivery delivery, OrderStatus orderStatus, List<OrderItem> orderItems) {
-        Order order = new Order(orderStatus, delivery, LocalDateTime.now(), user);
-        int totalPrice = 0;
+        Order order      = new Order(orderStatus, delivery, LocalDateTime.now(), user);
+        int   totalPrice = 0;
 
         for (OrderItem orderItem : orderItems) {
             totalPrice += orderItem.getTotalPrice(); // 각 상품의 총 가격 계산
