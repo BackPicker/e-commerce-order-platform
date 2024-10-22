@@ -10,7 +10,12 @@ import com.hello.ecommerceorderplatform.order.domain.Order;
 import com.hello.ecommerceorderplatform.order.domain.OrderItem;
 import com.hello.ecommerceorderplatform.order.domain.OrderStatus;
 import com.hello.ecommerceorderplatform.order.dto.CreateOrderResponseDto;
+import com.hello.ecommerceorderplatform.order.dto.OrderItemResponseDto;
 import com.hello.ecommerceorderplatform.order.dto.OrderRequestDto;
+import com.hello.ecommerceorderplatform.order.dto.OrderResponseDto;
+import com.hello.ecommerceorderplatform.order.repository.OrderItemRepository;
+import com.hello.ecommerceorderplatform.order.repository.OrderRepository;
+import com.hello.ecommerceorderplatform.order.repository.OrderRepositoryImpl;
 import com.hello.ecommerceorderplatform.user.domain.User;
 import com.hello.ecommerceorderplatform.wishlist.domain.WishList;
 import com.hello.ecommerceorderplatform.wishlist.domain.WishListItem;
@@ -24,6 +29,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 
 @Slf4j
@@ -31,11 +37,16 @@ import java.util.List;
 @RequiredArgsConstructor
 public class OrderManagerService {
 
-    private final OrderService     orderService;
-    private final OrderItemService orderItemService;
     private final DeliveryService  deliveryService;
     private final WishListService  wishListService;
     private final ItemService      itemService;
+
+
+    private final OrderRepository     orderRepository;
+    private final OrderRepositoryImpl orderRepositoryImpl;
+
+    private final OrderItemRepository orderItemRepository;
+
 
     @Transactional
     public CreateOrderResponseDto createOrder(OrderRequestDto orderRequestDto, User user) {
@@ -68,7 +79,7 @@ public class OrderManagerService {
 
             OrderItem orderItem = new OrderItem(item, wishListTotalPrice / orderCount, orderCount); // 단가 계산
             orderItems.add(orderItem);
-            orderItemService.save(orderItem);
+            orderItemRepository.save(orderItem);
 
             // 위시리스트 아이템 삭제
             wishList.removeWishListItem(wishListItem); // 위시리스트에서 아이템 제거
@@ -94,9 +105,40 @@ public class OrderManagerService {
 
         log.info("주문 생성");
         Order order = Order.createOrder(user, delivery, OrderStatus.ORDER_START, orderItems);
-        orderService.save(order);
+        orderRepository.save(order);
 
         log.info("주문 완료");
         return new CreateOrderResponseDto("결제가 완료되었습니다. 주문 ID: " + order.getId(), HttpStatus.CREATED.value());
     }
+
+    public void save(Order order) {
+        orderRepository.save(order);
+    }
+
+    // 주문 리스트 보기
+    public List<OrderResponseDto> getOrders(User user) {
+
+        return orderRepositoryImpl.findByUserIdOrderByCreateDateDesc(user.getId());
+    }
+
+    // 하나의 주문 가져오기
+    public OrderResponseDto getOrder(Long orderId, User user) {
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new NullPointerException("존재하지 않는 주문 번호입니다."));
+
+        if (!order.getUser()
+                .getId()
+                .equals(user.getId())) {
+            throw new SecurityException("이 주문에 접근할 권한이 없습니다.");
+        }
+
+        return new OrderResponseDto(user.getUsername(), order.getTotalOrderPrice(), orderItemRepository.findById(orderId)
+                .stream()
+                .map(item -> new OrderItemResponseDto(item.getTotalPrice(), item.getItem()
+                        .getItemName(), item.getOrderCount()))
+                .collect(Collectors.toList()), order.getOrderStatus());
+    }
+
+
+
 }
