@@ -111,7 +111,7 @@ public class OrderManagerService {
         deliveryService.save(delivery);
 
         // 주문 생성
-        Order order = Order.createOrder(user, delivery, OrderStatus.ORDER_START, orderItems);
+        Order order = Order.createOrder(user, delivery, OrderStatus.PAYMENT_PROCESSING, orderItems);
         orderRepository.save(order);
 
         // 주문 완료
