@@ -3,7 +3,6 @@ package com.hello.ecommerceorderplatform.wishlist.domain;
 import com.hello.ecommerceorderplatform.user.domain.User;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
-import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -19,7 +18,6 @@ import static jakarta.persistence.FetchType.LAZY;
 @Entity
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-@EqualsAndHashCode
 public class WishList {
 
     @Id
@@ -30,7 +28,7 @@ public class WishList {
     @JoinColumn(name = "user_id", nullable = false)
     private User user; // 위시리스트 회원
 
-    @OneToMany(mappedBy = "wishList", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "wishList", fetch = FetchType.LAZY, cascade = {CascadeType.PERSIST, CascadeType.REMOVE}, orphanRemoval = true)
     private List<WishListItem> wishListItemList = new ArrayList<>();
 
     @CreatedDate

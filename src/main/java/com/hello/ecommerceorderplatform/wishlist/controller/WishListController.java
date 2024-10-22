@@ -20,7 +20,8 @@ public class WishListController {
     private final WishListService wishListService;
 
     /**
-     * 위시 리스트 조회
+     * 모든 WishList 를 불러온다
+     * @return
      */
     @GetMapping
     public WishListResponseDto getWishListItems() {
@@ -28,33 +29,35 @@ public class WishListController {
         return wishListService.getWishListItems(user);
     }
 
-    /**
-     * 위시 리스트에 Item 담기
-     */
+    // addWishListItem item 저장
     @PostMapping
     public void addWishListItem(
             @RequestBody WishListItemDto wishListItemDto) {
+
         User user = getCurrentUser();
-        log.info("wishListItemDto = {}", wishListItemDto);
+
+        // wishListItem 에 저장한다
+
+        // wishList에 저장한다
         wishListService.addWishListItem(user, wishListItemDto);
     }
 
-
     /**
-     * 위시 리스트 내부 Item 개수 수정
+     *WishList 를 수정한다
      */
-
     @PutMapping("/{itemId}")
     public void updateWishListItem(
             @PathVariable Long itemId,
             @RequestBody WishListItemDto wishListItemDto) {
         User user = getCurrentUser();
+
+
         wishListService.updateWishListItem(user, itemId, wishListItemDto);
     }
 
-
     /**
-     * 위시 리스트 Item 취소
+     * WishList 삭제
+     * @param itemId
      */
     @DeleteMapping("/{itemId}")
     public void removeWishListItem(
@@ -63,14 +66,9 @@ public class WishListController {
         wishListService.removeWishListItem(user, itemId);
     }
 
-
     private User getCurrentUser() {
         Authentication authentication = SecurityContextHolder.getContext()
                 .getAuthentication();
-        UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
-        User            user        = userDetails.getUser();
-        log.info("user = {}", user);
-        return user;
+        return ((UserDetailsImpl) authentication.getPrincipal()).getUser();
     }
-
 }

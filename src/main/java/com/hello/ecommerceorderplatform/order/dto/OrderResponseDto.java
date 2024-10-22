@@ -1,21 +1,30 @@
 package com.hello.ecommerceorderplatform.order.dto;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
+import com.hello.ecommerceorderplatform.order.domain.OrderStatus;
+import com.querydsl.core.annotations.QueryProjection;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import lombok.Setter;
 
+import java.util.List;
+
+/**
+ * 주문 응답 DTO
+ */
 @Getter
-@Setter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-@JsonInclude(JsonInclude.Include.NON_NULL)
 public class OrderResponseDto {
-    private String  message;
-    private Integer statusCode;
 
-    public OrderResponseDto(String message, Integer statusCode) {
-        this.message    = message;
-        this.statusCode = statusCode;
+    private String                     username;
+    private long                       totalOrderPrice;
+    private List<OrderItemResponseDto> orderItems;
+    private OrderStatus                orderStatus;
+
+    @QueryProjection
+    public OrderResponseDto(String username, long totalOrderPrice, List<OrderItemResponseDto> orderItems, OrderStatus orderStatus) {
+        this.username        = username;
+        this.totalOrderPrice = totalOrderPrice;
+        this.orderItems      = orderItems;
+        this.orderStatus     = orderStatus;
     }
 }

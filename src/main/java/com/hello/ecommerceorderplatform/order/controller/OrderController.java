@@ -1,14 +1,18 @@
 package com.hello.ecommerceorderplatform.order.controller;
 
+import com.hello.ecommerceorderplatform.order.dto.CreateOrderResponseDto;
 import com.hello.ecommerceorderplatform.order.dto.OrderRequestDto;
-import com.hello.ecommerceorderplatform.order.dto.OrderResponseDto;
 import com.hello.ecommerceorderplatform.order.service.OrderManagerService;
+import com.hello.ecommerceorderplatform.order.service.OrderService;
 import com.hello.ecommerceorderplatform.user.domain.User;
 import com.hello.ecommerceorderplatform.user.security.UserDetailsImpl;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 @Slf4j
 @RestController
@@ -17,14 +21,21 @@ import org.springframework.web.bind.annotation.*;
 public class OrderController {
 
     private final OrderManagerService orderManagerService;
-
+    private final OrderService orderService;
 
     /**
-     * 그냥 주문
-     * 주문 + 위시리스트 주문 같이 주문
+     * 주문 목록 보기
+     */
+    public void getOrders() {
+        User user = getCurrentUser();
+        orderService.getOrders(user);
+    }
+
+    /**
+     * 주문
      */
     @PostMapping
-    public OrderResponseDto createOrder(
+    public CreateOrderResponseDto createOrder(
             @RequestBody(required = false) OrderRequestDto orderRequestDto) {
         User user = getCurrentUser();
         log.info("user = {}", user);

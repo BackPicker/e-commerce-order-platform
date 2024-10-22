@@ -6,7 +6,7 @@ import lombok.*;
 
 @Entity
 @Getter
-@ToString
+@ToString(exclude = {"wishList"})
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class WishListItem {
 
@@ -17,24 +17,21 @@ public class WishListItem {
     @Setter
     private Integer wishListItemQuantity; // 위시리스트 수량
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "item_id", nullable = false)
+    @ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.PERSIST)
+    @JoinColumn(name = "item_id")
     private Item item; // 아이템
 
     @Setter
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "wish_list_id", nullable = false)
-    private WishList wishList;// 위시리스트
+    @JoinColumn(name = "wish_list_id")
+    private WishList wishList; // ManyToOne 관계
 
     public WishListItem(Integer wishListItemQuantity, Item item) {
         this.wishListItemQuantity = wishListItemQuantity;
-        this.item                 = item;
+        this.item = item;
     }
 
     public int totalWishListPrice(Item item, Integer wishListItemQuantity) {
-        if (item == null || wishListItemQuantity == null) {
-            throw new IllegalArgumentException("아이템이나 수량이 null일 수 없습니다.");
-        }
         return item.getPrice() * wishListItemQuantity;
     }
 

@@ -10,12 +10,13 @@ import com.hello.ecommerceorderplatform.wishlist.domain.WishListItem;
 import com.hello.ecommerceorderplatform.wishlist.dto.WishListItemDto;
 import com.hello.ecommerceorderplatform.wishlist.dto.WishListResponseDto;
 import com.hello.ecommerceorderplatform.wishlist.repository.WishListItemRepository;
+import com.hello.ecommerceorderplatform.wishlist.repository.WishListItemRepositoryImpl;
 import com.hello.ecommerceorderplatform.wishlist.repository.WishListRepository;
 import com.hello.ecommerceorderplatform.wishlist.repository.WishListRepositoryImpl;
-import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.NoSuchElementException;
 
@@ -25,31 +26,24 @@ import java.util.NoSuchElementException;
 public class WishListService {
 
     private final WishListRepository     wishListRepository;
-    private final WishListItemRepository wishListItemRepository;
     private final WishListRepositoryImpl wishListRepositoryImpl;
+
+    private final WishListItemRepository     wishListItemRepository;
+    private final WishListItemRepositoryImpl wishListItemRepositoryImpl;
+
     private final ItemRepository         itemRepository;
 
-
-    /**
-     * 위시 리스트 조회
-     */
+    @Transactional
     public WishListResponseDto getWishListItems(User user) {
         WishList wishList   = getOrCreateWishList(user);
         long     totalPrice = calculateTotalPrice(wishList);
         return new WishListResponseDto(user.getUsername(), wishList, totalPrice);
     }
 
-
     @Transactional
     public WishList getOrCreateWishList(User user) {
-        if (!wishListRepository.existsById(user.getId())) {
-            WishList wishList = new WishList(user);
-            wishListRepository.save(wishList);
-            return wishList;
-        } else {
-            return wishListRepositoryImpl.findByUserId(user.getId())
-                    .orElseThrow(() -> new NoSuchElementException("회원을 찾을 수 없습니다"));
-        }
+        return wishListRepositoryImpl.findByUserId(user.getId())
+                .orElseGet(() -> wishListRepository.save(new WishList(user)));
     }
 
     private long calculateTotalPrice(WishList wishList) {
@@ -59,79 +53,76 @@ public class WishListService {
                 .sum();
     }
 
-    /**
-     * 위시 리스트에 Item 담기
-     */
+    // addWishListItem item 저장
     @Transactional
     public void addWishListItem(User user, WishListItemDto wishListItemDto) {
-        if (wishListItemDto.getQuantity() == null || wishListItemDto.getQuantity() <= 0) {
-            throw new InvalidQuantityException("수량은 1 이상이어야 합니다.");
-        }
+        log.info("wishListItemDto = {}", wishListItemDto);
+        validateQuantity(wishListItemDto.getQuantity());
 
-        WishList wishList = getOrCreateWishList(user);
+        // 아이템을 찾기
         Item item = itemRepository.findById(wishListItemDto.getItemId())
                 .orElseThrow(() -> new ItemNotFoundException("아이템을 찾을 수 없습니다."));
+        log.info("item = {}", item);
 
-        // 연관관계 설정
+        // 위시리스트 가져오기
+        WishList wishList = getOrCreateWishList(user);
+
+        // WishListItem 생성
         WishListItem wishListItem = new WishListItem(wishListItemDto.getQuantity(), item);
-        wishListItem.setWishList(wishList); // 연관관계 설정
+        wishListItem.setWishList(wishList);
 
-        // WishList에 아이템 추가
-        wishList.addWishListItem(wishListItem);
-
-        // WishList 저장 (cascade 설정이 되어 있어야 wishListItem도 함께 저장됨)
-        wishListRepository.save(wishList); // 이 호출로 인해 연관된 wishListItem이 저장됨
 
         log.info("wishListItem = {}", wishListItem);
-    }
 
-
-    /**
-     * 위시 리스트 내부 Item 개수 수정
-     */
-
-    @Transactional
-    public void updateWishListItem(User user, Long itemId, WishListItemDto wishListItemDto) {
-        if (wishListItemDto.getQuantity() == null || wishListItemDto.getQuantity() <= 0) {
-            throw new InvalidQuantityException("수량은 1 이상이어야 합니다.");
-        }
-
-        WishList wishList = getOrCreateWishList(user);
-        WishListItem wishListItem = wishList.getWishListItemList()
-                .stream()
-                .filter(item -> item.getId()
-                        .equals(itemId))
-                .findFirst()
-                .orElseThrow(() -> new ItemNotFoundException("아이템을 찾을 수 없습니다."));
-
-        wishListItem.setWishListItemQuantity(wishListItemDto.getQuantity());
+        // 위시리스트에 아이템 추가
         wishListItemRepository.save(wishListItem);
+        wishList.addWishListItem(wishListItem);
+        log.info("위시리스트에 아이템 추가 = {}", wishListItem);
+
+        // 위시리스트 저장
+        log.info("위시리스트 저장");
+        wishListRepository.save(wishList); // 이 호출로 인해 연관된 wishListItem이 저장됨
+
     }
 
 
     /**
-     * 위시 리스트 Item 취소
+     * WishList 삭제
+     * @param itemId
      */
-
     @Transactional
     public void removeWishListItem(User user, Long itemId) {
         WishList wishList = getOrCreateWishList(user);
-        WishListItem wishListItem = wishList.getWishListItemList()
-                .stream()
-                .filter(item -> item.getId()
-                        .equals(itemId))
-                .findFirst()
-                .orElseThrow(() -> new ItemNotFoundException("아이템을 찾을 수 없습니다."));
-
+        WishListItem wishListItem = findWishListItem(wishList, itemId);
         wishList.removeWishListItem(wishListItem);
         wishListRepository.save(wishList);
     }
 
-    /**
-     * 위시 리스트 삭제
-     */
-    public void deleteWishListItem(WishListItem wishListItem) {
-        wishListItemRepository.delete(wishListItem);
+    private void validateQuantity(Integer quantity) {
+        if (quantity == null || quantity <= 0) {
+            throw new InvalidQuantityException("수량은 1 이상이어야 합니다.");
+        }
+    }
+
+    private WishListItem findWishListItem(WishList wishList, Long itemId) {
+        return wishList.getWishListItemList()
+                .stream()
+                .filter(item -> item.getId()
+                        .equals(itemId))
+                .findFirst()
+                .orElseThrow(() -> new ItemNotFoundException("아이템을 찾을 수 없습니다."));
+    }
+
+    @Transactional
+    public void updateWishListItem(User user, Long itemId, WishListItemDto wishListItemDto) {
+        validateQuantity(wishListItemDto.getQuantity());
+
+        WishList wishList = wishListItemRepositoryImpl.findByUserId(user.getId())
+                .orElseThrow(() -> new NoSuchElementException("회원을 찾을 수 없습니다."));
+
+        WishListItem wishListItem = findWishListItem(wishList, itemId);
+        wishListItem.setWishListItemQuantity(wishListItemDto.getQuantity());
+        wishListItemRepository.save(wishListItem);
     }
 
 

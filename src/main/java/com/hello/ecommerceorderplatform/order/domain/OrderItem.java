@@ -27,15 +27,19 @@ public class OrderItem {
     private Order order;    // ManyToOne 관계
 
     @Column(nullable = false)
-    private int totalPrice;   // 총 주문 가격
+    private int orderItemPrice;   // 총 주문 가격
 
     @Column(nullable = false)
     private int orderCount;     // 주문 수량
 
-    public OrderItem(Item item, int totalPrice, int orderCount) {
-        this.item       = item;
-        this.totalPrice = totalPrice;
-        this.orderCount = orderCount;
+    public OrderItem(Item item, int orderItemPrice, int orderCount) {
+        this.item           = item;
+        this.orderItemPrice = orderItemPrice;
+        this.orderCount     = orderCount;
+    }
+
+    public int getTotalPrice() {
+        return orderItemPrice * orderCount; // 각 아이템의 총 가격
     }
 
 }

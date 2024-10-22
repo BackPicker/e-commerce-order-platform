@@ -9,8 +9,8 @@ import com.hello.ecommerceorderplatform.item.service.ItemService;
 import com.hello.ecommerceorderplatform.order.domain.Order;
 import com.hello.ecommerceorderplatform.order.domain.OrderItem;
 import com.hello.ecommerceorderplatform.order.domain.OrderStatus;
+import com.hello.ecommerceorderplatform.order.dto.CreateOrderResponseDto;
 import com.hello.ecommerceorderplatform.order.dto.OrderRequestDto;
-import com.hello.ecommerceorderplatform.order.dto.OrderResponseDto;
 import com.hello.ecommerceorderplatform.user.domain.User;
 import com.hello.ecommerceorderplatform.wishlist.domain.WishList;
 import com.hello.ecommerceorderplatform.wishlist.domain.WishListItem;
@@ -25,29 +25,32 @@ import org.springframework.stereotype.Service;
 import java.util.ArrayList;
 import java.util.List;
 
+
 @Slf4j
 @Service
 @RequiredArgsConstructor
 public class OrderManagerService {
 
-    private final OrderService    orderService;
-    private final DeliveryService deliveryService;
+    private final OrderService     orderService;
+    private final OrderItemService orderItemService;
+    private final DeliveryService  deliveryService;
     private final WishListService wishListService;
     private final ItemService     itemService;
 
     @Transactional
-    public OrderResponseDto createOrder(OrderRequestDto orderRequestDto, User user) {
+    public CreateOrderResponseDto createOrder(OrderRequestDto orderRequestDto, User user) {
         log.info("주문 시작");
-        WishList wishList = wishListService.getOrCreateWishList(user);
 
+        // 위시리스트 가져오기 또는 생성
+        WishList wishList = wishListService.getOrCreateWishList(user);
         if (wishList.getWishListItemList()
                 .isEmpty()) {
-            throw new WishListNotFoundException("위시 리스트를 찾을 수 없습니다");
+            throw new WishListNotFoundException("위시 리스트가 비어 있습니다.");
         }
 
         log.info("총 주문금액 지정");
-        int             totalPrice = 0;
         List<OrderItem> orderItems = new ArrayList<>();
+        int totalPrice = 0;
 
         log.info("orderItems 추가 로직 작동");
         for (WishListItem wishListItem : wishList.getWishListItemList()) {
@@ -56,36 +59,40 @@ public class OrderManagerService {
             int     wishListTotalPrice = wishListItem.totalWishListPrice(item, orderCount);
             totalPrice += wishListTotalPrice;
 
+            // 재고 수량 감소 처리
             try {
                 item.reduceQuantity(orderCount);
             } catch (NosuchQuantityException e) {
-                throw new IllegalArgumentException("재고가 부족합니다.");
+                throw new IllegalArgumentException("아이템 " + item.getItemName() + "의 재고가 부족합니다.");
             }
 
-            OrderItem orderItem = new OrderItem(item, wishListTotalPrice, orderCount);
+            OrderItem orderItem = new OrderItem(item, wishListTotalPrice / orderCount, orderCount); // 단가 계산
             orderItems.add(orderItem);
-            wishListService.deleteWishListItem(wishListItem);
+            orderItemService.save(orderItem);
+
+            // 위시리스트 아이템 삭제
         }
 
-        log.info("주문 금액 검증 로직 작동, totalPrice = {}, payment = {}", totalPrice, orderRequestDto.getPayment());
-        if (orderRequestDto.getPayment() != totalPrice) {
-            // throw new IllegalArgumentException("주문 금액이 다릅니다");
+        // 주문 금액 검증 로직
+        int calculatedTotalPrice = orderItems.stream()
+                .mapToInt(OrderItem::getTotalPrice) // 각 OrderItem의 getTotalPrice 호출
+                .sum();
+
+        log.info("주문 금액 검증 로직 작동, calculatedTotalPrice = {}, payment = {}", calculatedTotalPrice, orderRequestDto.getPayment());
+
+        if (orderRequestDto.getPayment() != calculatedTotalPrice) {
+            throw new IllegalArgumentException("주문 금액이 다릅니다. 실제 금액: " + calculatedTotalPrice + ", 입력 금액: " + orderRequestDto.getPayment());
         }
 
         log.info("배달 생성");
-        // 배달 객체 생성
         Delivery delivery = new Delivery(user.getAddress(), DeliveryStatus.PAYMENT_PROCESSING);
-        // Delivery를 먼저 저장
-        deliveryService.save(delivery); // Delivery 객체를 데이터베이스에 저장
+        deliveryService.save(delivery);
 
         log.info("주문 생성");
-        // 주문 생성
         Order order = Order.createOrder(user, delivery, OrderStatus.ORDER_START, orderItems);
-
-        // 이제 Order를 저장
         orderService.save(order);
 
         log.info("주문 완료");
-        return new OrderResponseDto("결제가 완료되었습니다", HttpStatus.CREATED.value());
+        return new CreateOrderResponseDto("결제가 완료되었습니다. 주문 ID: " + order.getId(), HttpStatus.CREATED.value());
     }
 }

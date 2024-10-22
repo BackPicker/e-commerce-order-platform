@@ -34,4 +34,13 @@ public class WishListRepositoryImpl {
                 .where(wishList.user.id.eq(userId))
                 .fetchOne());
     }
+
+
+    public void deleteWishListItem(Long wishListId) {
+        // Q 클래스 인스턴스 생성
+        factory.delete(wishList)
+                .where(wishList.id.eq(wishListId))
+                .execute();
+
+    }
 }

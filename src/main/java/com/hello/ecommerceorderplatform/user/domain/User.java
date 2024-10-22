@@ -9,7 +9,6 @@ import lombok.*;
 @Getter
 @ToString
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-@Table(name = "users")
 public class User {
 
     @Id
