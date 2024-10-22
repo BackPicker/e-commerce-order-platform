@@ -1,7 +1,6 @@
 package com.hello.ecommerceorderplatform.order.service;
 
 import com.hello.ecommerceorderplatform.delivery.domain.Delivery;
-import com.hello.ecommerceorderplatform.delivery.domain.DeliveryStatus;
 import com.hello.ecommerceorderplatform.delivery.service.DeliveryService;
 import com.hello.ecommerceorderplatform.item.domain.Item;
 import com.hello.ecommerceorderplatform.item.exception.NosuchQuantityException;
@@ -14,6 +13,7 @@ import com.hello.ecommerceorderplatform.order.dto.OrderItemResponseDto;
 import com.hello.ecommerceorderplatform.order.dto.OrderRequestDto;
 import com.hello.ecommerceorderplatform.order.dto.OrderResponseDto;
 import com.hello.ecommerceorderplatform.order.repository.OrderItemRepository;
+import com.hello.ecommerceorderplatform.order.repository.OrderItemRepositoryImpl;
 import com.hello.ecommerceorderplatform.order.repository.OrderRepository;
 import com.hello.ecommerceorderplatform.order.repository.OrderRepositoryImpl;
 import com.hello.ecommerceorderplatform.user.domain.User;
@@ -29,7 +29,6 @@ import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 
 @Slf4j
@@ -46,6 +45,7 @@ public class OrderManagerService {
     private final OrderRepositoryImpl orderRepositoryImpl;
 
     private final OrderItemRepository orderItemRepository;
+    private final OrderItemRepositoryImpl orderItemRepositoryImpl;
 
 
     /**
@@ -107,7 +107,7 @@ public class OrderManagerService {
         }
 
         // 배달 생성
-        Delivery delivery = new Delivery(user.getAddress(), DeliveryStatus.PAYMENT_PROCESSING);
+        Delivery delivery = new Delivery(user.getAddress());
         deliveryService.save(delivery);
 
         // 주문 생성
@@ -135,14 +135,13 @@ public class OrderManagerService {
                 .equals(user.getId())) {
             throw new SecurityException("이 주문에 접근할 권한이 없습니다.");
         }
+        List<OrderItemResponseDto> orderItems = orderItemRepositoryImpl.getOrder(orderId);
 
-        return new OrderResponseDto(user.getUsername(), order.getTotalOrderPrice(), orderItemRepository.findById(orderId)
-                .stream()
-                .map(item -> new OrderItemResponseDto(item.getTotalPrice(), item.getItem()
-                        .getItemName(), item.getOrderCount()))
-                .collect(Collectors.toList()), order.getOrderStatus());
+        return new OrderResponseDto(user.getUsername(), order.getTotalOrderPrice(), orderItems, order.getOrderStatus());
     }
 
 
+    public void cancelOrder(Long orderId, User user) {
 
+    }
 }

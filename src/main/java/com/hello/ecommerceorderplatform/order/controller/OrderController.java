@@ -60,6 +60,16 @@ public class OrderController {
     }
 
     /**
+     * 주문 취소
+     */
+    @DeleteMapping
+    public void cancelOrder(Long orderId) {
+        User user = getCurrentUser();
+        orderManagerService.cancelOrder(orderId, user);
+
+    }
+
+    /**
      * User 가져오기
      * @return
      */

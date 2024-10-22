@@ -25,18 +25,7 @@ public class Delivery {
     @Embedded
     private Address address;    // 회원 주소
 
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
-    private DeliveryStatus deliveryStatus;
-
-    public Delivery(Order order, Address address, DeliveryStatus deliveryStatus) {
-        this.order          = order;
-        this.address        = address;
-        this.deliveryStatus = deliveryStatus;
-    }
-
-    public Delivery(Address address, DeliveryStatus deliveryStatus) {
-        this.address        = address;
-        this.deliveryStatus = deliveryStatus;
+    public Delivery(Address address) {
+        this.address = address;
     }
 }
