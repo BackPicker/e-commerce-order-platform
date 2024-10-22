@@ -48,6 +48,13 @@ public class OrderManagerService {
     private final OrderItemRepository orderItemRepository;
 
 
+    /**
+     * 주문
+     *
+     * @param orderRequestDto
+     * @param user
+     * @return
+     */
     @Transactional
     public CreateOrderResponseDto createOrder(OrderRequestDto orderRequestDto, User user) {
         log.info("주문 시작");
@@ -59,10 +66,10 @@ public class OrderManagerService {
             throw new WishListNotFoundException("위시 리스트가 비어 있습니다.");
         }
 
-        log.info("총 주문금액 지정");
+        // 총 주문금액 지정
         List<OrderItem> orderItems = new ArrayList<>();
 
-        log.info("orderItems 추가 로직 작동");
+        // orderItems 추가 로직 작동
         List<WishListItem> wishListItems = new ArrayList<>(wishList.getWishListItemList());
 
         for (WishListItem wishListItem : wishListItems) {
@@ -99,21 +106,18 @@ public class OrderManagerService {
             throw new IllegalArgumentException("주문 금액이 다릅니다. 실제 금액: " + calculatedTotalPrice + ", 입력 금액: " + orderRequestDto.getPayment());
         }
 
-        log.info("배달 생성");
+        // 배달 생성
         Delivery delivery = new Delivery(user.getAddress(), DeliveryStatus.PAYMENT_PROCESSING);
         deliveryService.save(delivery);
 
-        log.info("주문 생성");
+        // 주문 생성
         Order order = Order.createOrder(user, delivery, OrderStatus.ORDER_START, orderItems);
         orderRepository.save(order);
 
-        log.info("주문 완료");
+        // 주문 완료
         return new CreateOrderResponseDto("결제가 완료되었습니다. 주문 ID: " + order.getId(), HttpStatus.CREATED.value());
     }
 
-    public void save(Order order) {
-        orderRepository.save(order);
-    }
 
     // 주문 리스트 보기
     public List<OrderResponseDto> getOrders(User user) {

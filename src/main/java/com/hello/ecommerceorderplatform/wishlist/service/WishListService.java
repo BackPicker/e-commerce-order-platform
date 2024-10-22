@@ -34,6 +34,23 @@ public class WishListService {
 
     private final ItemRepository itemRepository;
 
+    /**
+     * 공용 메서드
+     *
+     * @param user
+     * @return
+     */
+    @Transactional
+    public WishList getOrCreateWishList(User user) {
+        return wishListRepositoryImpl.findByUserId(user.getId())
+                .orElseGet(() -> wishListRepository.save(new WishList(user)));
+    }
+
+    /**
+     * 모든 WishList 를 불러오기
+     *
+     * @return
+     */
     @Transactional
     public WishListResponseDto getWishListItems(User user) {
         WishList wishList   = getOrCreateWishList(user);
@@ -41,12 +58,12 @@ public class WishListService {
         return new WishListResponseDto(user.getUsername(), wishList, totalPrice);
     }
 
-    @Transactional
-    public WishList getOrCreateWishList(User user) {
-        return wishListRepositoryImpl.findByUserId(user.getId())
-                .orElseGet(() -> wishListRepository.save(new WishList(user)));
-    }
-
+    /**
+     * 모든 WishList 를 불러오기 -> 가격 총합 계산
+     *
+     * @param wishList
+     * @return
+     */
     private long calculateTotalPrice(WishList wishList) {
         return wishList.getWishListItemList()
                 .stream()
@@ -54,7 +71,11 @@ public class WishListService {
                 .sum();
     }
 
-    // addWishListItem item 저장
+    /**
+     * WishList 하나 가져오기 -
+     *
+     * @param wishListItemDto
+     */
     @Transactional
     public void addWishListItem(User user, WishListItemDto wishListItemDto) {
         log.info("wishListItemDto = {}", wishListItemDto);
@@ -71,9 +92,6 @@ public class WishListService {
         // WishListItem 생성
         WishListItem wishListItem = new WishListItem(wishListItemDto.getQuantity(), item);
         wishListItem.setWishList(wishList);
-
-
-        log.info("wishListItem = {}", wishListItem);
 
         // 위시리스트에 아이템 추가
         wishListItemRepository.save(wishListItem);
@@ -94,7 +112,9 @@ public class WishListService {
      */
     @Transactional
     public void removeWishListItem(User user, Long itemId) {
+        // 위시리스트 가져오기
         WishList     wishList     = getOrCreateWishList(user);
+        // 가져온 위시리스트로 wishListItem 가져오기
         WishListItem wishListItem = findWishListItem(wishList, itemId);
         wishList.removeWishListItem(wishListItem);
         wishListRepository.save(wishList);

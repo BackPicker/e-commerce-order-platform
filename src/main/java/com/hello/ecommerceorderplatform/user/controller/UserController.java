@@ -26,6 +26,12 @@ public class UserController {
 
     private final UserService userService;
 
+    /**
+     * 회원가입
+     * @param userRegisterRequestDto
+     * @param bindingResult
+     * @return
+     */
     @PostMapping("/signup")
     public ResponseEntity<UserResponseDto> createMember(
             @Valid
@@ -42,9 +48,6 @@ public class UserController {
         return userService.createMember(userRegisterRequestDto);
     }
 
-    /**
-     * 로그인
-     */
 
     /**
      * 로그아웃

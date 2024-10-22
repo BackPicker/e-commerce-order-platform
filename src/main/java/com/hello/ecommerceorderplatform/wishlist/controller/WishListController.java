@@ -20,8 +20,7 @@ public class WishListController {
     private final WishListService wishListService;
 
     /**
-     * 모든 WishList 를 불러온다
-     *
+     * 모든 WishList 를 불러오기
      * @return
      */
     @GetMapping
@@ -30,21 +29,20 @@ public class WishListController {
         return wishListService.getWishListItems(user);
     }
 
-    // addWishListItem item 저장
+    /**
+     * WishList 하나 가져오기
+     * @param wishListItemDto
+     */
     @PostMapping
     public void addWishListItem(
             @RequestBody WishListItemDto wishListItemDto) {
 
         User user = getCurrentUser();
-
-        // wishListItem 에 저장한다
-
-        // wishList에 저장한다
         wishListService.addWishListItem(user, wishListItemDto);
     }
 
     /**
-     * WishList 를 수정한다
+     * WishList 수정
      */
     @PutMapping("/{itemId}")
     public void updateWishListItem(
@@ -58,7 +56,6 @@ public class WishListController {
 
     /**
      * WishList 삭제
-     *
      * @param itemId
      */
     @DeleteMapping("/{itemId}")

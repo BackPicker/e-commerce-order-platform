@@ -22,7 +22,8 @@ public class OrderController {
     private final OrderManagerService orderManagerService;
 
     /**
-     *  모든 주문 목록 보기
+     * 모든 주문 가져오기
+     * @return
      */
     @GetMapping
     public List<OrderResponseDto> getOrders() {
@@ -32,27 +33,36 @@ public class OrderController {
         return orders;
     }
 
+    /**
+     * 하나의 주문 가져오기
+     *
+     * @param orderId
+     * @return
+     */
     @GetMapping("/{orderId}")
-    public void getOrder(
+    public OrderResponseDto getOrder(
             @PathVariable("orderId") Long orderId) {
         User user = getCurrentUser();
-        orderManagerService.getOrder(orderId, user);
-
+        return orderManagerService.getOrder(orderId, user);
     }
 
 
     /**
-     * 주문
+     * 주문 생성
+     * @param orderRequestDto
+     * @return
      */
     @PostMapping
     public CreateOrderResponseDto createOrder(
             @RequestBody(required = false) OrderRequestDto orderRequestDto) {
         User user = getCurrentUser();
-        log.info("user = {}", user);
         return orderManagerService.createOrder(orderRequestDto, user);
     }
 
-
+    /**
+     * User 가져오기
+     * @return
+     */
     private User getCurrentUser() {
         UserDetailsImpl userDetails = (UserDetailsImpl) SecurityContextHolder.getContext()
                 .getAuthentication()

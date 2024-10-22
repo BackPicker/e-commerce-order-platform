@@ -24,20 +24,32 @@ public class ItemController {
 
     private final ItemService itemService;
 
-    // 전체 ITEM 목록 조회
+    /**
+     * 전체 ITEM 목록 조회
+     */
     @GetMapping("/list")
     public Page<ItemResponseDto> itemList(ItemSearchCondition searchCondition, Pageable pageable) {
         return itemService.itemList(searchCondition, pageable);
     }
 
-    // 상품 상세 조회
+    /**
+     * 상품 상세 조회
+     *
+     * @param itemId
+     * @return
+     */
     @GetMapping("/{itemId}")
     public ItemDetailResponseDto getItemDetail(
             @PathVariable Long itemId) {
         return itemService.getItemDetail(itemId);
     }
 
-    // 상품 등록
+    /**
+     * 상품 등록
+     *
+     * @param saveRequestDto
+     * @return
+     */
     @Secured("ROLE_ADMIN")
     @PostMapping("/add")
     public ResponseEntity<Void> saveItem(
@@ -50,7 +62,11 @@ public class ItemController {
     }
 
 
-    // 상품 수정
+    /**
+     * @param itemId
+     * @param requestDto
+     * @return
+     */
     @Secured("ROLE_ADMIN")
     @PutMapping("/{itemId}")
     public ResponseEntity<Void> updateItem(
@@ -61,7 +77,11 @@ public class ItemController {
                 .build();
     }
 
-    // 상품 삭제
+    /**
+     * 상품 삭제
+     * @param itemId
+     * @return
+     */
     @Secured("ROLE_ADMIN")
     @DeleteMapping("/{itemId}")
     public ResponseEntity<Void> deleteItemDetail(
