@@ -3,8 +3,7 @@ package com.hello.ecommerceorderplatform.order.domain;
 public enum OrderStatus {
 
 
-    // 주문 진행중, 주문 완료
-    PAYMENT_PROCESSING,
+    //  주문 완료
     PAYMENT_COMPLETED,
 
     //사용자에 의한 취소, 품절에 의한 취소

@@ -1,5 +1,6 @@
 package com.hello.ecommerceorderplatform.order.domain;
 
+import com.hello.ecommerceorderplatform.config.BaseEntity;
 import com.hello.ecommerceorderplatform.delivery.domain.Delivery;
 import com.hello.ecommerceorderplatform.user.domain.User;
 import jakarta.persistence.*;
@@ -7,9 +8,7 @@ import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import org.springframework.data.annotation.CreatedDate;
 
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -17,7 +16,7 @@ import java.util.List;
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Table(name = "orders")
-public class Order {
+public class Order extends BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -30,8 +29,6 @@ public class Order {
     @OneToMany(mappedBy = "order", fetch = FetchType.LAZY, cascade = CascadeType.REMOVE)
     private List<OrderItem> orderItems = new ArrayList<>();
 
-    @CreatedDate
-    private LocalDateTime orderDate;  // 주문 날짜
 
     @JoinColumn(name = "delivery_id")
     @OneToOne(fetch = FetchType.LAZY, cascade = CascadeType.REMOVE)
@@ -45,15 +42,14 @@ public class Order {
     @Column(nullable = false)
     private int totalOrderPrice; // 주문 총 금액 추가
 
-    public Order(OrderStatus orderStatus, Delivery delivery, LocalDateTime orderDate, User user) {
+    public Order(OrderStatus orderStatus, Delivery delivery, User user) {
         this.orderStatus = orderStatus;
         this.delivery    = delivery;
-        this.orderDate   = orderDate;
         this.user        = user;
     }
 
     public static Order createOrder(User user, Delivery delivery, OrderStatus orderStatus, List<OrderItem> orderItems) {
-        Order order      = new Order(orderStatus, delivery, LocalDateTime.now(), user);
+        Order order = new Order(orderStatus, delivery, user);
         int   totalPrice = 0;
 
         for (OrderItem orderItem : orderItems) {
@@ -68,5 +64,9 @@ public class Order {
     private void addOrderItem(OrderItem orderItem) {
         orderItems.add(orderItem);
         orderItem.setOrder(this);
+    }
+
+    public void updateOrderStatus(OrderStatus orderStatus) {
+        this.orderStatus = orderStatus;
     }
 }

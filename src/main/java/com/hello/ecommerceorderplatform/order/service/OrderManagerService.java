@@ -4,7 +4,7 @@ import com.hello.ecommerceorderplatform.delivery.domain.Delivery;
 import com.hello.ecommerceorderplatform.delivery.service.DeliveryService;
 import com.hello.ecommerceorderplatform.item.domain.Item;
 import com.hello.ecommerceorderplatform.item.exception.NosuchQuantityException;
-import com.hello.ecommerceorderplatform.item.service.ItemService;
+import com.hello.ecommerceorderplatform.item.repository.ItemRepositoryImpl;
 import com.hello.ecommerceorderplatform.order.domain.Order;
 import com.hello.ecommerceorderplatform.order.domain.OrderItem;
 import com.hello.ecommerceorderplatform.order.domain.OrderStatus;
@@ -25,8 +25,11 @@ import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
+import java.time.Duration;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -38,7 +41,8 @@ public class OrderManagerService {
 
     private final DeliveryService  deliveryService;
     private final WishListService  wishListService;
-    private final ItemService      itemService;
+
+    private final ItemRepositoryImpl itemRepositoryImpl;
 
 
     private final OrderRepository     orderRepository;
@@ -111,7 +115,7 @@ public class OrderManagerService {
         deliveryService.save(delivery);
 
         // 주문 생성
-        Order order = Order.createOrder(user, delivery, OrderStatus.PAYMENT_PROCESSING, orderItems);
+        Order order = Order.createOrder(user, delivery, OrderStatus.PAYMENT_COMPLETED, orderItems);
         orderRepository.save(order);
 
         // 주문 완료
@@ -141,7 +145,49 @@ public class OrderManagerService {
     }
 
 
-    public void cancelOrder(Long orderId, User user) {
+    public ResponseEntity<CreateOrderResponseDto> cancelOrder(Long orderId, User user) {
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new NullPointerException("존재하지 않는 주문 번호입니다."));
+        if (!order.getUser()
+                .getId()
+                .equals(user.getId())) {
+            throw new SecurityException("이 주문에 접근할 권한이 없습니다.");
+        }
+
+        switch (order.getOrderStatus()) {
+
+            case IN_DELIVERY:
+                return ResponseEntity.status(HttpStatus.OK)
+                        .body(new CreateOrderResponseDto("배송중인 상품입니다", HttpStatus.BAD_REQUEST.value()));
+
+            case DELIVERY_COMPLETED:
+                if (Duration.between(order.getModifiedAt(), LocalDateTime.now())
+                        .toDays() < 2) {
+                    order.updateOrderStatus(OrderStatus.CANCELED_BY_USER);
+
+                    return ResponseEntity.status(HttpStatus.OK)
+                            .body(new CreateOrderResponseDto("반품을 진행합니다", HttpStatus.OK.value()));
+
+                } else {
+                    return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                            .body(new CreateOrderResponseDto("반품 기한이 지났습니다", HttpStatus.BAD_REQUEST.value()));
+                }
+            case PAYMENT_COMPLETED:
+                List<OrderItem> orderItems = order.getOrderItems();
+                for (OrderItem orderItem : orderItems) {
+                    // 아이템
+                    Item item = orderItem.getItem();
+                    // 주문 수량
+                    int orderCount = orderItem.getOrderCount();
+                    itemRepositoryImpl.addItemQuantity(item.getId(), orderCount);
+                }
+                orderRepository.delete(order);
+                return ResponseEntity.status(HttpStatus.OK)
+                        .body(new CreateOrderResponseDto("주문이 취소되었습니다", HttpStatus.OK.value()));
+
+            default:
+                throw new RuntimeException("OrderStatus 오류 발생");
+        }
 
     }
 }

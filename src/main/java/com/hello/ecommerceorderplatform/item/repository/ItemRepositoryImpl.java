@@ -75,4 +75,11 @@ public class ItemRepositoryImpl {
     private Predicate itemPriceGoeCheck(Integer itemPriceGoe) {
         return itemPriceGoe != null ? item.price.goe(itemPriceGoe) : null;
     }
+
+    public void addItemQuantity(Long itemId, int orderCount) {
+        factory.update(item)
+                .set(item.quantity, item.quantity.add(orderCount))
+                .where(item.id.eq(itemId))
+                .execute();
+    }
 }
