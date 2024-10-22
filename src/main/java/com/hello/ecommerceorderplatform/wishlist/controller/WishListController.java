@@ -35,6 +35,7 @@ public class WishListController {
     public void addWishListItem(
             @RequestBody WishListItemDto wishListItemDto) {
         User user = getCurrentUser();
+        log.info("wishListItemDto = {}", wishListItemDto);
         wishListService.addWishListItem(user, wishListItemDto);
     }
 
@@ -55,7 +56,6 @@ public class WishListController {
     /**
      * 위시 리스트 Item 취소
      */
-
     @DeleteMapping("/{itemId}")
     public void removeWishListItem(
             @PathVariable Long itemId) {

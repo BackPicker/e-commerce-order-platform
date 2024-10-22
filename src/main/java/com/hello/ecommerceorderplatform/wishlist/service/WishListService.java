@@ -25,9 +25,10 @@ import java.util.NoSuchElementException;
 public class WishListService {
 
     private final WishListRepository     wishListRepository;
-    private final WishListRepositoryImpl wishListRepositoryImpl;
     private final WishListItemRepository wishListItemRepository;
+    private final WishListRepositoryImpl wishListRepositoryImpl;
     private final ItemRepository         itemRepository;
+
 
     /**
      * 위시 리스트 조회
@@ -39,7 +40,8 @@ public class WishListService {
     }
 
 
-    private WishList getOrCreateWishList(User user) {
+    @Transactional
+    public WishList getOrCreateWishList(User user) {
         if (!wishListRepository.existsById(user.getId())) {
             WishList wishList = new WishList(user);
             wishListRepository.save(wishList);
@@ -70,10 +72,19 @@ public class WishListService {
         Item item = itemRepository.findById(wishListItemDto.getItemId())
                 .orElseThrow(() -> new ItemNotFoundException("아이템을 찾을 수 없습니다."));
 
+        // 연관관계 설정
         WishListItem wishListItem = new WishListItem(wishListItemDto.getQuantity(), item);
+        wishListItem.setWishList(wishList); // 연관관계 설정
+
+        // WishList에 아이템 추가
         wishList.addWishListItem(wishListItem);
-        wishListRepository.save(wishList);
+
+        // WishList 저장 (cascade 설정이 되어 있어야 wishListItem도 함께 저장됨)
+        wishListRepository.save(wishList); // 이 호출로 인해 연관된 wishListItem이 저장됨
+
+        log.info("wishListItem = {}", wishListItem);
     }
+
 
     /**
      * 위시 리스트 내부 Item 개수 수정
@@ -114,6 +125,13 @@ public class WishListService {
 
         wishList.removeWishListItem(wishListItem);
         wishListRepository.save(wishList);
+    }
+
+    /**
+     * 위시 리스트 삭제
+     */
+    public void deleteWishListItem(WishListItem wishListItem) {
+        wishListItemRepository.delete(wishListItem);
     }
 
 

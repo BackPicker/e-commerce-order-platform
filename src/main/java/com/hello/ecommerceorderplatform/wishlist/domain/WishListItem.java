@@ -2,13 +2,11 @@ package com.hello.ecommerceorderplatform.wishlist.domain;
 
 import com.hello.ecommerceorderplatform.item.domain.Item;
 import jakarta.persistence.*;
-import lombok.AccessLevel;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 
 @Entity
 @Getter
+@ToString
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class WishListItem {
 
@@ -26,7 +24,7 @@ public class WishListItem {
     @Setter
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "wish_list_id", nullable = false)
-    private WishList wishList; // 위시리스트
+    private WishList wishList;// 위시리스트
 
     public WishListItem(Integer wishListItemQuantity, Item item) {
         this.wishListItemQuantity = wishListItemQuantity;
