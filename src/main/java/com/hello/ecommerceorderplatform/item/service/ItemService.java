@@ -83,4 +83,10 @@ public class ItemService {
                 .orElseThrow(() -> new NoSuchElementException("Item Not Found"));
         itemRepository.delete(item);
     }
+
+    public Item findById(Long itemId) {
+        return itemRepository.findById(itemId)
+                .orElseThrow(() -> new NoSuchElementException("Item not Found"));
+    }
+
 }

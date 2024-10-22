@@ -1,6 +1,7 @@
 package com.hello.ecommerceorderplatform.user.service;
 
 
+import com.hello.ecommerceorderplatform.user.domain.Address;
 import com.hello.ecommerceorderplatform.user.domain.User;
 import com.hello.ecommerceorderplatform.user.domain.UserRoleEnum;
 import com.hello.ecommerceorderplatform.user.dto.UserRegisterRequestDto;
@@ -60,7 +61,7 @@ public class UserService {
         String password = passwordEncoder.encode(userRegisterRequestDto.getPassword());
         String email    = passwordEncoder.encode(userRegisterRequestDto.getEmail());
         String phone    = passwordEncoder.encode(userRegisterRequestDto.getPhoneNumber());
-        String address  = passwordEncoder.encode(userRegisterRequestDto.getAddress());
+        Address address = userRegisterRequestDto.getAddress();
 
         if (userRepositoryImpl.existsUserByUsername(username)) {
             throw new IllegalArgumentException("이미 존재하는 ID 입니다");

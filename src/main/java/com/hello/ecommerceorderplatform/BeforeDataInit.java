@@ -18,10 +18,8 @@ public class BeforeDataInit {
 
     @EventListener(ApplicationReadyEvent.class)
     public void save() {
-
-
         for (int i = 1; i <= 100; i++) {
-            itemRepository.save(new Item("item" + i, "옷", new Random().nextInt(500) * 10, new Random().nextInt(100), "정말 좋습니다"));
+            itemRepository.save(new Item("item" + i, "옷", new Random().nextInt(500) * 10, 500, "정말 좋습니다"));
 
         }
 
