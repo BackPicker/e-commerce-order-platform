@@ -1,10 +1,12 @@
 package com.hello.ecommerceorderplatform.delivery.domain;
 
 import com.hello.ecommerceorderplatform.order.domain.Order;
+import com.hello.ecommerceorderplatform.user.domain.Address;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 @Entity
 @Getter
@@ -15,18 +17,26 @@ public class Delivery {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Setter
     @OneToOne(fetch = FetchType.LAZY)
     private Order order;   // OneToOne 관계
 
     @Column(nullable = false)
-    private String address;    // 회원 주소
+    @Embedded
+    private Address address;    // 회원 주소
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private DeliveryStatus deliveryStatus;
 
-    public Delivery(DeliveryStatus deliveryStatus, String address) {
-        this.deliveryStatus = deliveryStatus;
+    public Delivery(Order order, Address address, DeliveryStatus deliveryStatus) {
+        this.order          = order;
         this.address        = address;
+        this.deliveryStatus = deliveryStatus;
+    }
+
+    public Delivery(Address address, DeliveryStatus deliveryStatus) {
+        this.address = address;
+        this.deliveryStatus = deliveryStatus;
     }
 }

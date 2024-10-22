@@ -61,7 +61,7 @@ public class Item {
         this.quantity += quantity;
     }
 
-    public void removeQuantity(int orderCount) {
+    public void reduceQuantity(int orderCount) {
         int totalCount = this.quantity - orderCount;
         if (totalCount < 0) {
             throw new NosuchQuantityException("재고가 부족합니다");

@@ -3,8 +3,10 @@ package com.hello.ecommerceorderplatform.wishlist.domain;
 import com.hello.ecommerceorderplatform.user.domain.User;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.annotation.CreatedDate;
 
 import java.time.LocalDateTime;
@@ -13,9 +15,11 @@ import java.util.List;
 
 import static jakarta.persistence.FetchType.LAZY;
 
+@Slf4j
 @Entity
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
+@EqualsAndHashCode
 public class WishList {
 
     @Id
@@ -26,8 +30,8 @@ public class WishList {
     @JoinColumn(name = "user_id", nullable = false)
     private User user; // 위시리스트 회원
 
-    @OneToMany(mappedBy = "wishList", fetch = LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<WishListItem> wishListItemList = new ArrayList<>(); // 위시리스트 아이템 리스트
+    @OneToMany(mappedBy = "wishList", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private List<WishListItem> wishListItemList = new ArrayList<>();
 
     @CreatedDate
     private LocalDateTime createdAt; // 위시리스트 생성일

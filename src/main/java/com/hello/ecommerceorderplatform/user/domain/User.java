@@ -29,17 +29,19 @@ public class User {
     private String email; // 회원 이메일
 
     @Column(nullable = false)
-    private String address; // 회원 주소
+    @Embedded
+    private Address address; // 회원 주소
 
     @Column(nullable = false)
     @Enumerated(EnumType.STRING)
     private UserRoleEnum role;
 
-    @OneToOne(mappedBy = "user")
+    @OneToOne(mappedBy = "user", cascade = CascadeType.REMOVE)
     private WishList wishList;
 
+
     @Builder
-    public User(String username, String password, String phoneNumber, String email, String address, UserRoleEnum role) {
+    public User(String username, String password, String phoneNumber, String email, Address address, UserRoleEnum role) {
         this.username    = username;
         this.password    = password;
         this.phoneNumber = phoneNumber;
