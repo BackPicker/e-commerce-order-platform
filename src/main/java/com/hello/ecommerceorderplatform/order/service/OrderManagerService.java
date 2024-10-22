@@ -34,8 +34,8 @@ public class OrderManagerService {
     private final OrderService     orderService;
     private final OrderItemService orderItemService;
     private final DeliveryService  deliveryService;
-    private final WishListService wishListService;
-    private final ItemService     itemService;
+    private final WishListService  wishListService;
+    private final ItemService      itemService;
 
     @Transactional
     public CreateOrderResponseDto createOrder(OrderRequestDto orderRequestDto, User user) {

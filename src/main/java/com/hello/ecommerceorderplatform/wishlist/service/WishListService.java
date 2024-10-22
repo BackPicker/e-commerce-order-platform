@@ -94,7 +94,7 @@ public class WishListService {
      */
     @Transactional
     public void removeWishListItem(User user, Long itemId) {
-        WishList wishList = getOrCreateWishList(user);
+        WishList     wishList     = getOrCreateWishList(user);
         WishListItem wishListItem = findWishListItem(wishList, itemId);
         wishList.removeWishListItem(wishListItem);
         wishListRepository.save(wishList);

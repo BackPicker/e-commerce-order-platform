@@ -26,6 +26,7 @@ public class WishListRepositoryImpl {
                 .fetch()
                 .isEmpty();
     }
+
     public Optional<WishList> findByUserId(Long userId) {
         return Optional.ofNullable(factory.selectFrom(wishList)
                 .where(wishList.user.id.eq(userId))
