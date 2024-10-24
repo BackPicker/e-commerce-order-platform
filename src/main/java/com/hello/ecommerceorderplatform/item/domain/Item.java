@@ -4,16 +4,15 @@ package com.hello.ecommerceorderplatform.item.domain;
 import com.hello.ecommerceorderplatform.item.dto.ItemRequestDto;
 import com.hello.ecommerceorderplatform.item.exception.NosuchQuantityException;
 import jakarta.persistence.*;
-import lombok.AccessLevel;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.ToString;
+import lombok.*;
 import org.springframework.data.annotation.CreatedDate;
 
 import java.time.LocalDateTime;
 
 @Entity
 @Getter
+@Builder
+@AllArgsConstructor
 @ToString
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Item {
