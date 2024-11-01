@@ -1,7 +1,7 @@
 package com.back.ecommerceorderplatform.item.controller;
 
 
-import com.back.ecommerceorderplatform.common.dto.ResponseMessage;
+import com.back.common.dto.ResponseMessage;
 import com.back.ecommerceorderplatform.item.domain.Item;
 import com.back.ecommerceorderplatform.item.dto.ItemDetailResponseDto;
 import com.back.ecommerceorderplatform.item.dto.ItemRequestDto;

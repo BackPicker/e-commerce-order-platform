@@ -1,4 +1,4 @@
-package com.back.ecommerceorderplatform.common.dto;
+package com.back.common.dto;
 
 import lombok.Data;
 import lombok.NoArgsConstructor;

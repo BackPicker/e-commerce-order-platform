@@ -1,4 +1,4 @@
-package com.back.ecommerceorderplatform.common.entity;
+package com.back.common.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.Column;

@@ -1,6 +1,6 @@
 package com.back.ecommerceorderplatform.order.domain;
 
-import com.back.ecommerceorderplatform.common.entity.BaseEntity;
+import com.back.common.entity.BaseEntity;
 import com.back.ecommerceorderplatform.delivery.domain.Delivery;
 import com.back.ecommerceorderplatform.user.domain.User;
 import jakarta.persistence.*;

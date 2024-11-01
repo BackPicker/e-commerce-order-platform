@@ -1,7 +1,7 @@
 package com.back.ecommerceorderplatform.item.domain;
 
 
-import com.back.ecommerceorderplatform.common.entity.BaseEntity;
+import com.back.common.entity.BaseEntity;
 import com.back.ecommerceorderplatform.item.dto.ItemRequestDto;
 import com.back.ecommerceorderplatform.item.exception.NosuchQuantityException;
 import jakarta.persistence.*;

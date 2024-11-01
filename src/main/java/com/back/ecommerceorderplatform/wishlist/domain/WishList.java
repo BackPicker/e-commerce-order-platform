@@ -1,6 +1,6 @@
 package com.back.ecommerceorderplatform.wishlist.domain;
 
-import com.back.ecommerceorderplatform.common.entity.BaseEntity;
+import com.back.common.entity.BaseEntity;
 import com.back.ecommerceorderplatform.user.domain.User;
 import jakarta.persistence.*;
 import lombok.AccessLevel;

@@ -1,4 +1,5 @@
-package com.back.ecommerceorderplatform.common.config;
+package com.back.ecommerceorderplatform.item.config;
+
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.jsontype.BasicPolymorphicTypeValidator;

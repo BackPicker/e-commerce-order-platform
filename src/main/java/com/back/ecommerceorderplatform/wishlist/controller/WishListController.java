@@ -1,6 +1,6 @@
 package com.back.ecommerceorderplatform.wishlist.controller;
 
-import com.back.ecommerceorderplatform.common.dto.ResponseMessage;
+import com.back.common.dto.ResponseMessage;
 import com.back.ecommerceorderplatform.user.domain.User;
 import com.back.ecommerceorderplatform.user.security.UserDetailsImpl;
 import com.back.ecommerceorderplatform.wishlist.dto.WishListItemDeleteRequestDto;

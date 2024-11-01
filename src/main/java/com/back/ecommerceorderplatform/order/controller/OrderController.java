@@ -1,6 +1,6 @@
 package com.back.ecommerceorderplatform.order.controller;
 
-import com.back.ecommerceorderplatform.common.dto.ResponseMessage;
+import com.back.common.dto.ResponseMessage;
 import com.back.ecommerceorderplatform.order.dto.CreateOrderResponseDto;
 import com.back.ecommerceorderplatform.order.dto.OrderRequestDto;
 import com.back.ecommerceorderplatform.order.dto.OrderResponseDto;
