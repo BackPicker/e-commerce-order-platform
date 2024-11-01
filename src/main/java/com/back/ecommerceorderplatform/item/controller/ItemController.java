@@ -31,12 +31,7 @@ public class ItemController {
         return itemService.itemList(searchCondition, pageable);
     }
 
-    @GetMapping("/{itemId}")
-    public ItemDetailResponseDto getItemDetail(
-            @PathVariable
-            Long itemId) {
-        return itemService.getItemDetail(itemId);
-    }
+
 
     @Secured("ROLE_ADMIN")
     @PostMapping("/add")
@@ -53,6 +48,14 @@ public class ItemController {
                 .build();
 
         return ResponseEntity.ok(responseMessage);
+    }
+
+    @GetMapping("/{itemId}")
+    public ItemDetailResponseDto getItemDetail(
+            @PathVariable
+            Long itemId) {
+
+        return itemService.getItemDetail(itemId);
     }
 
     @Secured("ROLE_ADMIN")

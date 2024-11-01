@@ -9,45 +9,40 @@ import lombok.*;
 
 @Entity
 @Getter
-@Builder
-@AllArgsConstructor
 @ToString
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Item extends BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long   id;      // 상품 ID
+    private Long   id;
     @Column(nullable = false)
-    private String itemName;    // 상품 이름
+    private String itemName;
     @Column(nullable = false)
-    private String category;    // 상품 카테고리
+    private String category;
     @Column(nullable = false)
-    private int    price;   // 상품 가격
+    private int    price;
     @Column(nullable = false)
-    private int    quantity;    // 상품 수량
-    @Column(nullable = false)
-    private String description; // 상품 설명
+    private int    quantity;
 
-
+    @Builder
     public Item(String itemName,
                 String category,
                 int price,
-                int quantity,
-                String description) {
+                int quantity) {
         this.itemName    = itemName;
         this.category    = category;
         this.price       = price;
         this.quantity    = quantity;
-        this.description = description;
     }
 
-    public Item(ItemRequestDto saveRequestDto) {
-        this.itemName    = saveRequestDto.getItemName();
-        this.category    = saveRequestDto.getCategory();
-        this.price       = saveRequestDto.getPrice();
-        this.quantity    = saveRequestDto.getQuantity();
-        this.description = saveRequestDto.getDescription();
+    public static Item dtoToEntity(ItemRequestDto dto) {
+        return Item.builder()
+                .itemName(dto.getItemName())
+                .category(dto.getCategory())
+                .price(dto.getPrice())
+                .quantity(dto.getQuantity())
+                .build();
     }
 
     public void updateItemDetails(ItemRequestDto itemRequestDto) {
@@ -55,7 +50,6 @@ public class Item extends BaseEntity {
         this.category    = itemRequestDto.getCategory();
         this.price       = itemRequestDto.getPrice();
         this.quantity    = itemRequestDto.getQuantity();
-        this.description = itemRequestDto.getDescription();
     }
 
     public void addQuantity(int quantity) {

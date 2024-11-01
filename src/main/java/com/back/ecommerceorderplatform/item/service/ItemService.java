@@ -34,7 +34,9 @@ public class ItemService {
         if (itemRepositoryImpl.existByItemName(saveRequestDto.getItemName())) {
             throw new IllegalArgumentException("이미 등록된 상품명입니다");
         }
-        return itemRepository.save(new Item(saveRequestDto));
+        Item save = itemRepository.save(Item.dtoToEntity(saveRequestDto));
+        log.info("save = {}", save);
+        return save;
     }
 
 
@@ -46,12 +48,12 @@ public class ItemService {
     }
 
 
-    @Transactional
     @Cacheable(cacheNames = "itemCache", key = "'item:' + args[0]", cacheManager = "cacheManager")
     public ItemDetailResponseDto getItemDetail(Long itemId) {
-        ItemDetailResponseDto detailItem = itemRepositoryImpl.getItemDetail(itemId)
-                .orElseThrow(() -> new NoSuchElementException("Item Not Found"));
-        return detailItem;
+
+        return itemRepository.findById(itemId)
+                .map(ItemDetailResponseDto::entityFromDTO)
+                .orElseThrow(() -> new IllegalArgumentException("Item not Found"));
     }
 
     @Transactional
@@ -67,7 +69,7 @@ public class ItemService {
         Item updatedItem = itemRepository.save(item);
 
         // Item을 ItemDetailResponseDto로 변환하여 반환
-        return ItemDetailResponseDto.from(updatedItem);
+        return ItemDetailResponseDto.entityFromDTO(updatedItem);
     }
 
     @Transactional

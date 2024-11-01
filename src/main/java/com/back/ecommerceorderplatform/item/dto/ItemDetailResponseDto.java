@@ -2,11 +2,9 @@ package com.back.ecommerceorderplatform.item.dto;
 
 
 import com.back.ecommerceorderplatform.item.domain.Item;
-import com.querydsl.core.annotations.QueryProjection;
-import lombok.AccessLevel;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
+@ToString
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class ItemDetailResponseDto {
@@ -17,7 +15,7 @@ public class ItemDetailResponseDto {
     private int    quantity;
     private String description;
 
-    @QueryProjection
+    @Builder
     public ItemDetailResponseDto(String itemName,
                                  String category,
                                  int price,
@@ -30,8 +28,12 @@ public class ItemDetailResponseDto {
         this.description = description;
     }
 
-    public static ItemDetailResponseDto from(Item item) {
-        return new ItemDetailResponseDto(item.getItemName(), item.getCategory(), item.getPrice(), item.getQuantity(),
-                item.getDescription());
+    public static ItemDetailResponseDto entityFromDTO(Item item) {
+        return ItemDetailResponseDto.builder()
+                .itemName(item.getItemName())
+                .category(item.getCategory())
+                .price(item.getPrice())
+                .quantity(item.getQuantity())
+                .build();
     }
 }

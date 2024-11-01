@@ -23,18 +23,14 @@ public class ItemRequestDto {
     @NotNull
     @Min(value = 0)
     private int    quantity;
-    @NotBlank
-    private String description;
 
     public ItemRequestDto(String itemName,
                           String category,
                           int price,
-                          int quantity,
-                          String description) {
+                          int quantity) {
         this.itemName    = itemName;
         this.category    = category;
         this.price       = price;
         this.quantity    = quantity;
-        this.description = description;
     }
 }

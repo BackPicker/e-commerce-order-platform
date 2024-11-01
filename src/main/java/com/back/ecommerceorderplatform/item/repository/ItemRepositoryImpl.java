@@ -1,10 +1,13 @@
 package com.back.ecommerceorderplatform.item.repository;
 
-import com.back.ecommerceorderplatform.item.dto.*;
+import com.back.ecommerceorderplatform.item.dto.ItemResponseDto;
+import com.back.ecommerceorderplatform.item.dto.ItemSearchCondition;
+import com.back.ecommerceorderplatform.item.dto.QItemResponseDto;
 import com.querydsl.core.types.Predicate;
 import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import jakarta.persistence.EntityManager;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Repository;
@@ -15,6 +18,7 @@ import java.util.Optional;
 import static com.back.ecommerceorderplatform.item.domain.QItem.item;
 
 
+@Slf4j
 @Repository
 public class ItemRepositoryImpl {
 
@@ -55,14 +59,6 @@ public class ItemRepositoryImpl {
                         .fetchOne())
                 .orElse(0L);
         return new CustomPageImpl<>(content, pageable, totalCount);
-    }
-
-    public Optional<ItemDetailResponseDto> getItemDetail(Long itemId) {
-        return Optional.ofNullable(
-                factory.select(new QItemDetailResponseDto(item.itemName, item.category, item.price, item.quantity, item.description))
-                        .from(item)
-                        .where(item.id.eq(itemId))
-                        .fetchOne());
     }
 
     private BooleanExpression itemNameCheck(String itemName) {

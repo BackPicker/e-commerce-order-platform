@@ -19,6 +19,8 @@ repositories {
 
 
 dependencies {
+    implementation project(':common')
+
     // Boot Starter
     implementation 'org.springframework.boot:spring-boot-starter-web'
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
