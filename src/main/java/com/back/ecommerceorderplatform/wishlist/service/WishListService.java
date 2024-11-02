@@ -1,9 +1,5 @@
 package com.back.ecommerceorderplatform.wishlist.service;
 
-import com.back.ecommerceorderplatform.item.domain.Item;
-import com.back.ecommerceorderplatform.item.exception.InvalidQuantityException;
-import com.back.ecommerceorderplatform.item.exception.ItemNotFoundException;
-import com.back.ecommerceorderplatform.item.repository.ItemRepository;
 import com.back.ecommerceorderplatform.user.domain.User;
 import com.back.ecommerceorderplatform.wishlist.domain.WishList;
 import com.back.ecommerceorderplatform.wishlist.domain.WishListItem;
@@ -13,6 +9,10 @@ import com.back.ecommerceorderplatform.wishlist.repository.WishListItemRepositor
 import com.back.ecommerceorderplatform.wishlist.repository.WishListItemRepositoryImpl;
 import com.back.ecommerceorderplatform.wishlist.repository.WishListRepository;
 import com.back.ecommerceorderplatform.wishlist.repository.WishListRepositoryImpl;
+import com.back.itemservice.domain.Item;
+import com.back.itemservice.exception.InvalidQuantityException;
+import com.back.itemservice.exception.ItemNotFoundException;
+import com.back.itemservice.repository.ItemRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;

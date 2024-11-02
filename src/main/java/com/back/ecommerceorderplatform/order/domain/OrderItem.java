@@ -1,7 +1,7 @@
 package com.back.ecommerceorderplatform.order.domain;
 
 
-import com.back.ecommerceorderplatform.item.domain.Item;
+import com.back.itemservice.domain.Item;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
