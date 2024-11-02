@@ -2,19 +2,17 @@ package com.back.itemservice.controller;
 
 
 import com.back.common.dto.ResponseMessage;
-import com.back.itemservice.domain.Item;
 import com.back.itemservice.dto.ItemDetailResponseDto;
 import com.back.itemservice.dto.ItemRequestDto;
 import com.back.itemservice.dto.ItemResponseDto;
-import com.back.itemservice.dto.ItemSearchCondition;
+import com.back.itemservice.repository.ItemRepository;
 import com.back.itemservice.service.ItemService;
-import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @Slf4j
 @RestController
@@ -23,28 +21,31 @@ import org.springframework.web.bind.annotation.*;
 public class ItemController {
 
     private final ItemService itemService;
-
-    @GetMapping("/list")
-    public Page<ItemResponseDto> itemList(ItemSearchCondition searchCondition,
-                                          Pageable pageable) {
-        return itemService.itemList(searchCondition, pageable);
-    }
-
+    private final ItemRepository itemRepository;
 
     @PostMapping("/add")
-    public ResponseEntity<ResponseMessage> saveItem(
+    public ResponseEntity<ResponseMessage> itemSave(
             @RequestBody
-            @Valid
             ItemRequestDto saveRequestDto) {
-        Item saveItem = itemService.saveItem(saveRequestDto);
+        ItemResponseDto itemResponseDto = itemService.saveItem(saveRequestDto);
 
         ResponseMessage responseMessage = ResponseMessage.builder()
-                .data(saveItem)
+                .data(itemResponseDto)
                 .statusCode(201)
                 .detailMessage("상품 저장이 완료되었습니다")
                 .build();
 
         return ResponseEntity.ok(responseMessage);
+    }
+
+    @GetMapping("/list")
+    public List<ItemResponseDto> getItems(
+            @RequestParam(defaultValue = "1")
+            int page,
+            @RequestParam(defaultValue = "10")
+            int size) {
+
+        return itemService.getItems(page, size);
     }
 
     @GetMapping("/{itemId}")

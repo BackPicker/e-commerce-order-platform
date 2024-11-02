@@ -1,4 +1,6 @@
 rootProject.name = 'e-commerce-order-platform'
 
+include 'eureka-server'
+
 include 'common'
 include 'item-service'

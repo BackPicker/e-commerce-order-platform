@@ -13,19 +13,16 @@ public class ItemDetailResponseDto {
     private String category;
     private int    price;
     private int    quantity;
-    private String description;
 
     @Builder
     public ItemDetailResponseDto(String itemName,
                                  String category,
                                  int price,
-                                 int quantity,
-                                 String description) {
+                                 int quantity) {
         this.itemName    = itemName;
         this.category    = category;
         this.price       = price;
         this.quantity    = quantity;
-        this.description = description;
     }
 
     public static ItemDetailResponseDto entityFromDTO(Item item) {

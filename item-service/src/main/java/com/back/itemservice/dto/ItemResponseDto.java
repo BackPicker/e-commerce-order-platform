@@ -1,7 +1,8 @@
 package com.back.itemservice.dto;
 
-import com.querydsl.core.annotations.QueryProjection;
+import com.back.itemservice.domain.Item;
 import lombok.AccessLevel;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
@@ -14,14 +15,11 @@ public class ItemResponseDto {
     private int    price;
     private int    quantity;
 
-    @QueryProjection
-    public ItemResponseDto(String itemName,
-                           String category,
-                           int price,
-                           int quantity) {
-        this.itemName = itemName;
-        this.category = category;
-        this.price    = price;
-        this.quantity = quantity;
+    @Builder
+    public ItemResponseDto(Item item) {
+        this.itemName = item.getItemName();
+        this.category = item.getCategory();
+        this.price    = item.getPrice();
+        this.quantity = item.getQuantity();
     }
 }
