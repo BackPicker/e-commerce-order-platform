@@ -28,9 +28,9 @@ public class ItemRequestDto {
                           String category,
                           int price,
                           int quantity) {
-        this.itemName    = itemName;
-        this.category    = category;
-        this.price       = price;
-        this.quantity    = quantity;
+        this.itemName = itemName;
+        this.category = category;
+        this.price    = price;
+        this.quantity = quantity;
     }
 }

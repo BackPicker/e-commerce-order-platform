@@ -42,14 +42,14 @@ import java.util.List;
 public class OrderManagerService {
 
     // Rate Limiter 설정
-    private static final int REQUESTS_PER_SECOND = 300;
-    private final DeliveryService deliveryService;
-    private final WishListService wishListService;
-    private final ItemRepositoryImpl itemRepositoryImpl;
-    private final OrderRepository orderRepository;
-    private final OrderRepositoryImpl orderRepositoryImpl;
-    private final OrderItemRepository     orderItemRepository;
-    private final OrderItemRepositoryImpl orderItemRepositoryImpl;
+    private static final int                     REQUESTS_PER_SECOND = 300;
+    private final        DeliveryService         deliveryService;
+    private final        WishListService         wishListService;
+    private final        ItemRepositoryImpl      itemRepositoryImpl;
+    private final        OrderRepository         orderRepository;
+    private final        OrderRepositoryImpl     orderRepositoryImpl;
+    private final        OrderItemRepository     orderItemRepository;
+    private final        OrderItemRepositoryImpl orderItemRepositoryImpl;
 
     @Transactional
     public CreateOrderResponseDto createOrder(OrderRequestDto orderRequestDto,

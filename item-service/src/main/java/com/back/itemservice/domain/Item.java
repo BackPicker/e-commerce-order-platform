@@ -29,10 +29,10 @@ public class Item extends BaseEntity {
                 String category,
                 int price,
                 int quantity) {
-        this.itemName    = itemName;
-        this.category    = category;
-        this.price       = price;
-        this.quantity    = quantity;
+        this.itemName = itemName;
+        this.category = category;
+        this.price    = price;
+        this.quantity = quantity;
     }
 
     public static Item dtoToEntity(ItemRequestDto dto) {
@@ -45,10 +45,10 @@ public class Item extends BaseEntity {
     }
 
     public void updateItemDetails(ItemRequestDto itemRequestDto) {
-        this.itemName    = itemRequestDto.getItemName();
-        this.category    = itemRequestDto.getCategory();
-        this.price       = itemRequestDto.getPrice();
-        this.quantity    = itemRequestDto.getQuantity();
+        this.itemName = itemRequestDto.getItemName();
+        this.category = itemRequestDto.getCategory();
+        this.price    = itemRequestDto.getPrice();
+        this.quantity = itemRequestDto.getQuantity();
     }
 
     public void addQuantity(int quantity) {
