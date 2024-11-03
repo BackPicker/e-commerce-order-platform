@@ -4,3 +4,4 @@ include 'eureka-server'
 
 include 'common'
 include 'item-service'
+include 'wishlist-service'

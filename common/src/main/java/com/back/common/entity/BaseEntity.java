@@ -26,6 +26,9 @@ public abstract class BaseEntity {
     @LastModifiedDate
     protected LocalDateTime modifiedAt;
 
+    @Column(nullable = false)
+    private Boolean isDelete = false;
+
     @JsonIgnore
     public String getCreatedAtAsString() {
         return createdAt != null ? createdAt.format(DATE_TIME_FORMATTER) : "N/A";

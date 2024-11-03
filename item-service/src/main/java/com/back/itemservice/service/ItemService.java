@@ -54,10 +54,10 @@ public class ItemService {
 
     @Cacheable(cacheNames = "itemCache", key = "'item:' + args[0]", cacheManager = "cacheManager")
     public ItemDetailResponseDto getItemDetail(Long itemId) {
-
-        return itemRepository.findById(itemId)
+        ItemDetailResponseDto dtoItem = itemRepository.findById(itemId)
                 .map(ItemDetailResponseDto::entityFromDTO)
                 .orElseThrow(() -> new IllegalArgumentException("Item not Found"));
+        return dtoItem;
     }
 
     @Transactional
