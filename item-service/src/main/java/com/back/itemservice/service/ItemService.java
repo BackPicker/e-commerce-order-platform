@@ -72,7 +72,6 @@ public class ItemService {
         item.updateItemDetails(requestDto);
         Item updatedItem = itemRepository.save(item);
 
-        // Item을 ItemDetailResponseDto로 변환하여 반환
         return ItemDetailResponseDto.entityFromDTO(updatedItem);
     }
 
@@ -82,5 +81,11 @@ public class ItemService {
         Item item = itemRepository.findById(itemId)
                 .orElseThrow(() -> new NoSuchElementException("Item Not Found"));
         itemRepository.delete(item);
+    }
+
+    public ItemDetailResponseDto getEurekaItemDetail(Long itemId) {
+        return itemRepository.findById(itemId)
+                .map(ItemDetailResponseDto::entityFromDTO)
+                .orElseThrow(() -> new IllegalArgumentException("Item not Found"));
     }
 }

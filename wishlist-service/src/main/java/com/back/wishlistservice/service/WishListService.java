@@ -20,8 +20,8 @@ import java.util.List;
 @RequiredArgsConstructor
 public class WishListService {
 
-    private final WishListRepository wishListRepository;
-    private final FeignItemService   feignItemService;
+    private final WishListRepository         wishListRepository;
+    private final FeignWishListToItemService feignWishListToItemService;
 
 
     @Transactional
@@ -42,7 +42,7 @@ public class WishListService {
                                 WishListRequestDto wishListItemDto) {
         Long    paramItemId   = wishListItemDto.getItemId();
         Integer paramQuantity = wishListItemDto.getQuantity();
-        Item    item          = feignItemService.getItem(paramItemId);
+        Item item = feignWishListToItemService.getItem(paramItemId);
 
         if (wishListRepository.existsByUserIdAndItemId(userId, item.getItemId())) {
             log.info("wishList 가 존재해서 수량을 update 합니다");

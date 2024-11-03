@@ -86,4 +86,14 @@ public class ItemController {
                 .build();
         return ResponseEntity.ok(responseMessage);
     }
+
+    // Eureka  통신
+    @GetMapping("/eureka/{itemId}")
+    public ItemDetailResponseDto getEurekaItemDetail(
+            @PathVariable
+            Long itemId) {
+
+        return itemService.getEurekaItemDetail(itemId);
+    }
+
 }
