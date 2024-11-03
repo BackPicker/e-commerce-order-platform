@@ -26,7 +26,7 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class ItemService {
 
-    private final ItemRepository     itemRepository;
+    private final ItemRepository itemRepository;
 
     @Transactional
     @CacheEvict(cacheNames = "itemCache", allEntries = true, cacheManager = "cacheManager")

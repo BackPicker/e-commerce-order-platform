@@ -17,9 +17,8 @@ import org.springframework.web.bind.annotation.*;
 @RequiredArgsConstructor
 public class WishListController {
 
-    private final WishListService wishListService;
-
     static final Long USER_ID = 1L;
+    private final WishListService wishListService;
 
     @GetMapping
     public ResponseEntity<ResponseMessage> getWishListItems(HttpServletRequest request) {

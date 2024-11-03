@@ -2,18 +2,22 @@ package com.back.itemservice.dto;
 
 
 import com.back.itemservice.domain.Item;
-import lombok.*;
+import lombok.AccessLevel;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class ItemDetailResponseDto {
 
 
-    private Long itemId;
+    private Long   itemId;
     private String itemName;
     private String category;
     private int    price;
     private int    quantity;
+
     @Builder
     public ItemDetailResponseDto(Long itemId,
                                  String itemName,
