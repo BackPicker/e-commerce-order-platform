@@ -26,8 +26,7 @@ import java.util.NoSuchElementException;
 @RequiredArgsConstructor
 public class OrderService {
 
-    private final OrderRepository     orderRepository;
-
+    private final OrderRepository orderRepository;
     private final FeignOrderToItemService feignOrderToItemService;
 
 

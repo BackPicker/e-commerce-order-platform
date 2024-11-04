@@ -51,8 +51,6 @@ public class Item extends BaseEntity {
         this.quantity = itemRequestDto.getQuantity();
     }
 
-
-
     public void reduceQuantity(int orderCount) {
         int totalCount = this.quantity - orderCount;
         if (totalCount < 0) {
