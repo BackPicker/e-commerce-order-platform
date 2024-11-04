@@ -6,6 +6,7 @@ import com.back.orderservice.order.domain.OrderStatus;
 import com.back.orderservice.order.dto.CreateOrderDTO;
 import com.back.orderservice.order.dto.Item;
 import com.back.orderservice.order.dto.OrderResponseDto;
+import com.back.orderservice.order.exception.InsufficientStockException;
 import com.back.orderservice.order.repository.OrderRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -86,9 +87,11 @@ public class OrderService {
         Integer orderCount = createOrderDTO.getOrderCount();
         long    payment    = createOrderDTO.getPayment();
 
+        log.info("주문 생성 시도: 사용자 ID: {}, 아이템 ID: {}", userId, itemId);
+
         Item item = feignOrderToItemService.eurekaItem(itemId);
         if (item.getQuantity() < orderCount) {
-            throw new IllegalArgumentException("재고가 부족합니다");
+            throw new InsufficientStockException("재고가 부족합니다. 현재 재고: " + item.getQuantity());
         }
 
         long totalOrderPrice = orderCount * item.getPrice();
