@@ -1,5 +1,4 @@
-package com.back.userservice.domain;
-
+package com.back.userservice.entity;
 
 import jakarta.persistence.*;
 import lombok.AccessLevel;
@@ -16,10 +15,10 @@ public class User {
     private Long id;
 
     @Column(nullable = false, unique = true)
-    private String username; // 회원 아이디
+    private String username;
 
     @Column(nullable = false)
-    private String password; // 회원 비밀번호
+    private String password;
 
     @Column(nullable = false)
     private String phoneNumber; // 전화번호
@@ -31,9 +30,14 @@ public class User {
     @Embedded
     private Address address; // 회원 주소
 
-    @Column(nullable = false)
     @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
     private UserRoleEnum role;
+
+    @PrePersist
+    protected void onCreate() {
+        this.role = UserRoleEnum.USER;
+    }
 
     public User(String username,
                 String password,
@@ -49,4 +53,3 @@ public class User {
         this.role        = role;
     }
 }
-

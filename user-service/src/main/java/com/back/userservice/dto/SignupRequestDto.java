@@ -1,17 +1,16 @@
 package com.back.userservice.dto;
 
-
-import com.back.userservice.domain.Address;
+import com.back.userservice.entity.Address;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
-import lombok.Getter;
-import lombok.Setter;
-import lombok.ToString;
+import lombok.AccessLevel;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
-@Getter
-@Setter
-@ToString
-public class UserRegisterRequestDto {
+@Data
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
+public class SignupRequestDto {
 
     private String username;
     @Pattern(regexp = "^(?=.*[0-9])(?=.*[a-zA-Z])(?=.*[@#$%^&+=!]).{4,}$", message = "비밀번호는 최소 4자리 이상이며, 숫자, 문자 및 특수 문자를 포함해야 합니다.")
@@ -30,13 +29,14 @@ public class UserRegisterRequestDto {
     private String adminToken = "";
 
     // Address 클래스를 포함한 생성자
-    public UserRegisterRequestDto(String username,
-                                  String password,
-                                  String phoneNumber,
-                                  String email,
-                                  Address address,
-                                  boolean admin,
-                                  String adminToken) {
+    @Builder
+    public SignupRequestDto(String username,
+                            String password,
+                            String phoneNumber,
+                            String email,
+                            Address address,
+                            boolean admin,
+                            String adminToken) {
         this.username    = username;
         this.password    = password;
         this.phoneNumber = phoneNumber;

@@ -1,5 +1,6 @@
 jwt:
-  secret-key: 7J206rG0and07Iuc7YGs66a/7YKk7J6F64uI64uk7KGw7Ius7ZW07JW87ZW07JqU
+  secret:
+    key: ${JWT_SECRET_KEY:7J206rG0and07Iuc7YGs66a/7YKk7J6F64uI64uk7KGw7Ius7ZW07JW87ZW07JqU}
 
 admin:
   token: 7J206rG0YWRtaW50b2tlbuyeheuLiOuLpOydtOqyg+uPhOyhsOyLrO2VmOyEuOyalA

@@ -1,4 +1,4 @@
-package com.back.userservice.domain;
+package com.back.userservice.entity;
 
 public enum UserRoleEnum {
 

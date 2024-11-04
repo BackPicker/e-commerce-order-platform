@@ -1,4 +1,4 @@
-package com.back.userservice.domain;
+package com.back.userservice.entity;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Embeddable;
