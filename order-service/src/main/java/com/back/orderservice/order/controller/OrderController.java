@@ -1,15 +1,14 @@
 package com.back.orderservice.order.controller;
 
+import com.back.common.dto.ResponseMessage;
+import com.back.orderservice.order.dto.CreateOrderDTO;
 import com.back.orderservice.order.dto.OrderResponseDto;
 import com.back.orderservice.order.service.OrderService;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
@@ -41,22 +40,14 @@ public class OrderController {
     }
 
 
-/*
+/* 
     @PostMapping
     public ResponseEntity<ResponseMessage> createOrder(
             @RequestBody
-            OrderRequestDto orderRequestDto) {
-        User                   user     = getCurrentUser();
-        CreateOrderResponseDto response = orderManagerService.createOrder(orderRequestDto, user);
+            CreateOrderDTO createOrderDTO) {
+        // Long userId = new ParseRequestUtil().extractUserIdFromRequest(request);
+        return orderService.createOrder(userId, createOrderDTO);
 
-        ResponseMessage responseMessage = ResponseMessage.builder()
-                .data(response)
-                .statusCode(201)  // 상태 코드 201 (Created)
-                .resultMessage("주문 생성 성공")
-                .build();
-
-        return ResponseEntity.status(201)
-                .body(responseMessage);
     } */
 
     /*

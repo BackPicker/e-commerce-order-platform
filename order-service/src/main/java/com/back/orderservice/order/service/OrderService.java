@@ -1,19 +1,22 @@
 package com.back.orderservice.order.service;
 
+import com.back.common.dto.ResponseMessage;
+import com.back.common.dto.order.CreateOrderReqDto;
 import com.back.orderservice.order.domain.Order;
-import com.back.orderservice.order.domain.OrderItem;
+import com.back.orderservice.order.dto.CreateOrderDTO;
 import com.back.orderservice.order.dto.Item;
-import com.back.orderservice.order.dto.OrderItemResponseDTO;
 import com.back.orderservice.order.dto.OrderResponseDto;
 import com.back.orderservice.order.repository.OrderItemRepository;
 import com.back.orderservice.order.repository.OrderRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.NoSuchElementException;
 
 
 @Slf4j
@@ -27,63 +30,55 @@ public class OrderService {
     private final FeignOrderToItemService feignOrderToItemService;
 
 
-    // 주문 리스트 보기
+    /**
+     * 주문 리스트 보기
+     */
     public ResponseEntity<List<OrderResponseDto>> getOrders(Long userId) {
-        // 사용자 ID로 주문 리스트 조회
         List<Order> orderList = orderRepository.findAllByUserIdOrderByCreatedAtDesc(userId);
 
         if (orderList.isEmpty()) {
-            // throw new NoSuchElementException("주문이 없습니다.");
+            throw new NoSuchElementException("주문이 없습니다.");
         }
 
         List<OrderResponseDto> orderResponseDtoList = new ArrayList<>();
         for (Order order : orderList) {
-            List<OrderItemResponseDTO> orderItems = new ArrayList<>();
-
-            for (OrderItem orderItem : order.getOrderItems()) {
-                // 아이템 정보 가져오기 (FeignClient 사용)
-                Item                 item         = feignOrderToItemService.eurekaItem(orderItem.getItemId());
-                OrderItemResponseDTO orderItemDto = OrderItemResponseDTO.entityToDTO(orderItem, item);
-                orderItems.add(orderItemDto);
-            }
-
-            // OrderResponseDto 생성
-            OrderResponseDto orderResponseDto = OrderResponseDto.entityToDto(order, orderItems);
+            Item             item             = feignOrderToItemService.eurekaItem(order.getItemId());
+            OrderResponseDto orderResponseDto = OrderResponseDto.entityToDTO(order, item, userId);
             orderResponseDtoList.add(orderResponseDto);
         }
-        return ResponseEntity.ok(orderResponseDtoList);
+
+        return ResponseEntity.status(HttpStatus.OK)
+                .body(orderResponseDtoList);
     }
 
 
+    /**
+     * 주문 단건 조회
+     */
     public ResponseEntity<OrderResponseDto> getOneOrder(Long orderId,
                                                         Long userId) {
         log.info("orderId = {}, userId = {}", orderId, userId);
-        // 주문 번호로 주문 조회
-        Order order = orderRepository.findByIdAndUserId(orderId, userId)
-                .get();
 
-        // .orElseThrow(() -> new NoSuchEleorderIdmentException("존재하지 않는 주문 번호입니다."));
+        Order order = orderRepository.findByIdAndUserId(orderId, userId)
+                // .get();
+                .orElseThrow(() -> new NoSuchElementException("존재하지 않는 주문 번호입니다."));
 
         // 주문이 해당 사용자에 속하는지 확인
-/*         if (!order.getUserId()
+        if (!order.getUserId()
                 .equals(userId)) {
             throw new IllegalArgumentException("이 주문은 해당 사용자에게 속하지 않습니다.");
-        } */
-
-        // 주문 항목 리스트 생성
-        List<OrderItemResponseDTO> orderItems = new ArrayList<>();
-        for (OrderItem orderItem : order.getOrderItems()) {
-            // 아이템 정보 가져오기 (FeignClient 사용)
-            Item                 item         = feignOrderToItemService.eurekaItem(orderItem.getItemId());
-            OrderItemResponseDTO orderItemDto = OrderItemResponseDTO.entityToDTO(orderItem, item);
-            orderItems.add(orderItemDto);
         }
 
-        // DTO 생성
-        OrderResponseDto orderResponseDto = OrderResponseDto.entityToDto(order, orderItems);
-
-        return ResponseEntity.ok(orderResponseDto);
+        Item             item             = feignOrderToItemService.eurekaItem(order.getItemId());
+        OrderResponseDto orderResponseDto = OrderResponseDto.entityToDTO(order, item, userId);
+        return ResponseEntity.status(HttpStatus.OK)
+                .body(orderResponseDto);
     }
+
+    /**
+     * 주문하기
+     */
+
 
 
 

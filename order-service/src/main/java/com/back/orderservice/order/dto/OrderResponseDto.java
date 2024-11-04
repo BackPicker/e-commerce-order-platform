@@ -7,38 +7,40 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
-import java.util.List;
-
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class OrderResponseDto {
-    private Long                       orderId;                      // 주문 ID
-    private Long                       userId;                       // 사용자 ID
-    private int                        totalOrderPrice;               // 총 주문 가격
-    private OrderStatus                orderStatus;           // 주문 상태
-    private List<OrderItemResponseDTO> items;  // 주문 항목 리스트
+
+    private Long        orderId;
+    private Long        userId;
+    private String      itemName;
+    private Long        totalOrderPrice;
+    private OrderStatus orderStatus;
 
     @Builder
     public OrderResponseDto(Long orderId,
                             Long userId,
-                            int totalOrderPrice,
-                            OrderStatus orderStatus,
-                            List<OrderItemResponseDTO> items) {
+                            String itemName,
+                            Long totalOrderPrice,
+                            OrderStatus orderStatus) {
         this.orderId         = orderId;
         this.userId          = userId;
+        this.itemName = itemName;
         this.totalOrderPrice = totalOrderPrice;
         this.orderStatus     = orderStatus;
-        this.items           = items;
     }
 
-    public static OrderResponseDto entityToDto(Order order,
-                                               List<OrderItemResponseDTO> orderItemDtos) {
+
+    public static OrderResponseDto entityToDTO(Order order,
+                                               Item item,
+                                               Long userId) {
+
         return OrderResponseDto.builder()
                 .orderId(order.getId())
-                .userId(order.getUserId())
+                .userId(userId)
+                .itemName(item.getItemName())
                 .totalOrderPrice(order.getTotalOrderPrice())
                 .orderStatus(order.getOrderStatus())
-                .items(orderItemDtos)
                 .build();
     }
 }

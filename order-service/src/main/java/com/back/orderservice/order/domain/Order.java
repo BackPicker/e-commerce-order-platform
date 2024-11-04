@@ -6,9 +6,6 @@ import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
-import java.util.ArrayList;
-import java.util.List;
-
 @Entity
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
@@ -22,13 +19,16 @@ public class Order extends BaseEntity {
     @Column(nullable = false)
     private Long userId;
 
-    @Enumerated(EnumType.STRING)
-    private OrderStatus orderStatus;
+    @Column(nullable = false)
+    private Long itemId;
 
     @Column(nullable = false)
-    private int totalOrderPrice;
+    private Integer orderCount;
 
-    @OneToMany(mappedBy = "order")
-    private List<OrderItem> orderItems = new ArrayList<>();
+    @Column(nullable = false)
+    private Long totalOrderPrice;
+
+    @Enumerated(EnumType.STRING)
+    private OrderStatus orderStatus;
 
 }
