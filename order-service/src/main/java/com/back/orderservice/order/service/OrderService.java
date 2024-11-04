@@ -1,19 +1,21 @@
 package com.back.orderservice.order.service;
 
 import com.back.common.dto.ResponseMessage;
-import com.back.common.dto.order.CreateOrderReqDto;
 import com.back.orderservice.order.domain.Order;
+import com.back.orderservice.order.domain.OrderStatus;
 import com.back.orderservice.order.dto.CreateOrderDTO;
 import com.back.orderservice.order.dto.Item;
 import com.back.orderservice.order.dto.OrderResponseDto;
-import com.back.orderservice.order.repository.OrderItemRepository;
 import com.back.orderservice.order.repository.OrderRepository;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
+import java.time.Duration;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.NoSuchElementException;
@@ -25,7 +27,6 @@ import java.util.NoSuchElementException;
 public class OrderService {
 
     private final OrderRepository     orderRepository;
-    private final OrderItemRepository orderItemRepository;
 
     private final FeignOrderToItemService feignOrderToItemService;
 
@@ -75,178 +76,133 @@ public class OrderService {
                 .body(orderResponseDto);
     }
 
+
     /**
      * 주문하기
      */
+    @Transactional
+    public ResponseEntity<ResponseMessage> createOrder(Long userId,
+                                                       CreateOrderDTO createOrderDTO) {
+        Long    itemId     = createOrderDTO.getItemId();
+        Integer orderCount = createOrderDTO.getOrderCount();
+        long    payment    = createOrderDTO.getPayment();
 
-
-
-
-
-/*     @Transactional
-    public CreateOrderResponseDto createOrder(OrderRequestDto orderRequestDto,
-                                              User user) {
-        log.info("주문 시작");
-
-        // 위시리스트 가져오기 또는 생성
-        WishList wishList = wishListService.getOrCreateWishList(user);
-        if (wishList.getWishListItemList()
-                .isEmpty()) {
-            throw new WishListNotFoundException("위시 리스트가 비어 있습니다.");
+        Item item = feignOrderToItemService.eurekaItem(itemId);
+        if (item.getQuantity() < orderCount) {
+            throw new IllegalArgumentException("재고가 부족합니다");
         }
 
-        // 총 주문금액 지정
-        List<OrderItem>    orderItems    = new ArrayList<>();
-        List<WishListItem> wishListItems = new ArrayList<>(wishList.getWishListItemList());
+        long totalOrderPrice = orderCount * item.getPrice();
 
-        // 총 계산할 금액 변수
-        int calculatedTotalPrice = 0;
-
-        for (WishListItem wishListItem : wishListItems) {
-            OrderItem orderItem = createOrderItem(wishListItem);
-            orderItems.add(orderItem);
-            orderItemRepository.save(orderItem);
-
-            // 총 가격 누적
-            calculatedTotalPrice += orderItem.getTotalPrice();
+        // 결제 시도
+        if (payment != totalOrderPrice) {
+            throw new IllegalArgumentException(
+                    "결제 금액을 올바르게 입력하세요 결제해야 할 금액은 " + totalOrderPrice + " 입니다, 주문 금액은 " + createOrderDTO.getPayment());
         }
+        // 재고 감소 후 주문 저장
+        feignOrderToItemService.reduceItemQuantity(itemId, orderCount);
+        // User 의 Money 추가해서, 감소시키는 로직 추가?
 
-        // 주문 금액 검증
-        validateOrderTotal(calculatedTotalPrice, orderRequestDto.getPayment());
-
-        // 위시리스트 삭제
-        wishListService.removeWishList(user.getId());
-
-        // 배달 생성
-        Delivery delivery = new Delivery(user.getAddress());
-        deliveryService.save(delivery);
-
-        // 주문 생성
-        Order order = Order.createOrder(user, delivery, OrderStatus.PAYMENT_COMPLETED, orderItems);
+        //
+        Order order = new Order(userId, item.getItemId(), orderCount, totalOrderPrice);
         orderRepository.save(order);
-
-        log.info("주문 완료, 주문 ID: {}", order.getId());
-        return new CreateOrderResponseDto("결제가 완료되었습니다. 주문 ID: " + order.getId(), HttpStatus.CREATED.value());
-    } */
-
-/*     private OrderItem createOrderItem(WishListItem wishListItem) {
-        Item    item       = wishListItem.getItem();
-        Integer orderCount = wishListItem.getWishListItemQuantity();
-
-        try {
-            item.reduceQuantity(orderCount);
-        } catch (NosuchQuantityException e) {
-            throw new InsufficientStockException("아이템 " + item.getItemName() + "의 재고가 부족합니다.");
-        }
-
-        int totalPrice = wishListItem.totalWishListPrice(item, orderCount);
-        return new OrderItem(item, totalPrice / orderCount, orderCount);
-    } */
-
-/*
-    private void validateOrderTotal(int calculatedTotalPrice,
-                                    int payment) {
-        log.info("주문 금액 검증, calculatedTotalPrice = {}, payment = {}", calculatedTotalPrice, payment);
-
-        if (payment != calculatedTotalPrice) {
-            throw new OrderTotalMismatchException("주문 금액이 다릅니다. 실제 금액: " + calculatedTotalPrice + ", 입력 금액: " + payment);
-        }
-    } */
+        ResponseMessage build = ResponseMessage.builder()
+                .data(order)
+                .statusCode(200)
+                .resultMessage("주문이 성공했습니다")
+                .build();
+        return ResponseEntity.ok(build);
+    }
 
 
-
-/*     // 하나의 주문 가져오기
-    public OrderResponseDto getOrder(Long orderId,
-                                     User user) {
+    @Transactional
+    public ResponseEntity<ResponseMessage> cancelOrder(Long userId,
+                                                       Long orderId) {
         Order order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new NullPointerException("존재하지 않는 주문 번호입니다."));
 
-        if (!order.getUser()
-                .getId()
-                .equals(user.getId())) {
-            throw new SecurityException("이 주문에 접근할 권한이 없습니다.");
-        }
-        List<OrderItemResponseDto> orderItems = orderItemRepositoryImpl.getOrderItemsByOrderId(orderId);
-
-        return new OrderResponseDto(user.getUsername(), order.getTotalOrderPrice(), orderItems, order.getOrderStatus());
-    } */
-
-
-/*     @Transactional
-    public ResponseEntity<CreateOrderResponseDto> cancelOrder(Long orderId,
-                                                              User user) {
-        Order order = orderRepository.findById(orderId)
-                .orElseThrow(() -> new NullPointerException("존재하지 않는 주문 번호입니다."));
-        if (!order.getUser()
-                .getId()
-                .equals(user.getId())) {
+        if (!order.getUserId()
+                .equals(userId)) {
             throw new SecurityException("이 주문에 접근할 권한이 없습니다.");
         }
 
         switch (order.getOrderStatus()) {
 
-            case IN_DELIVERY:
-                return ResponseEntity.status(HttpStatus.OK)
-                        .body(new CreateOrderResponseDto("배송중인 상품입니다", HttpStatus.BAD_REQUEST.value()));
+            // 0일차, 결제 완료
+            case PAYMENT_STATUS_COMPLETED:
+                order.updateOrderStatus(OrderStatus.ORDER_CANCELED_BY_USER);
+                orderRepository.saveAndFlush(order);
 
+                return ResponseEntity.status(HttpStatus.OK)
+                        .body(ResponseMessage.builder()
+                                .statusCode(HttpStatus.OK.value())
+                                .resultMessage("반품이 성공적으로 진행되었습니다")
+                                .build());
+
+            // 1일차, 배송 중
+            case DELIVERY_IN_PROGRESS:
+                return ResponseEntity.status(HttpStatus.OK)
+                        .body(ResponseMessage.builder()
+                                .statusCode(HttpStatus.BAD_REQUEST.value())
+                                .resultMessage("현재 배송이 진행중이라 취소가 불가능 합니다")
+                                .build());
+
+            // 2일차, 배송 완료
             case DELIVERY_COMPLETED:
                 if (Duration.between(order.getModifiedAt(), LocalDateTime.now())
                         .toDays() < 2) {
                     order.updateOrderStatus(OrderStatus.ORDER_CANCELED_BY_USER);
+                    orderRepository.saveAndFlush(order);
 
                     return ResponseEntity.status(HttpStatus.OK)
-                            .body(new CreateOrderResponseDto("반품을 진행합니다", HttpStatus.OK.value()));
+                            .body(ResponseMessage.builder()
+                                    .statusCode(HttpStatus.OK.value())
+                                    .resultMessage("반품이 성공적으로 진행되었습니다")
+                                    .build());
 
                 } else {
                     return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                            .body(new CreateOrderResponseDto("반품 기한이 지났습니다", HttpStatus.BAD_REQUEST.value()));
+                            .body(ResponseMessage.builder()
+                                    .statusCode(HttpStatus.BAD_REQUEST.value())
+                                    .resultMessage("기간이 지나 반품이 진행되지 않았습니다")
+                                    .build());
                 }
-            case PAYMENT_COMPLETED:
-                List<OrderItem> orderItems = order.getOrderItems();
-                for (OrderItem orderItem : orderItems) {
-                    // 아이템
-                    Item item = orderItem.getItem();
-                    // 주문 수량
-                    int orderCount = orderItem.getOrderCount();
-                    itemRepositoryImpl.addItemQuantity(item.getId(), orderCount);
-                }
-                orderRepository.delete(order);
-                return ResponseEntity.status(HttpStatus.OK)
-                        .body(new CreateOrderResponseDto("주문이 취소되었습니다", HttpStatus.OK.value()));
-
             default:
-                throw new RuntimeException("OrderStatus 오류 발생");
+                throw new RuntimeException("Order 오류 발생");
         }
-    } */
-/*
+    }
+
+    @Transactional
     public void orderTimeCheck() {
         List<Order> orderList = orderRepository.findAll();
         for (Order order : orderList) {
+
             switch (order.getOrderStatus()) {
-                case PAYMENT_COMPLETED:
+
+                case PAYMENT_STATUS_COMPLETED:
                     if (Duration.between(order.getCreatedAt(), LocalDateTime.now())
-                            .toDays() == 1) order.updateOrderStatus(OrderStatus.IN_DELIVERY);
+                            .toDays() == 1) {
+                        order.updateOrderStatus(OrderStatus.DELIVERY_IN_PROGRESS);
+                    }
 
-                case IN_DELIVERY:
-                    if (Duration.between(order.getModifiedAt(), LocalDateTime.now())
-                            .toDays() == 1) order.updateOrderStatus(OrderStatus.DELIVERY_COMPLETED);
-
-                case DELIVERY_CANCELED_BY_USER:
+                case DELIVERY_IN_PROGRESS:
                     if (Duration.between(order.getModifiedAt(), LocalDateTime.now())
                             .toDays() == 1) {
-                        order.updateOrderStatus(OrderStatus.DELIVERY_CANCELED);
+                        order.updateOrderStatus(OrderStatus.DELIVERY_COMPLETED);
+                    }
 
-                        List<OrderItem> orderItemList = order.getOrderItems();
-
-                        for (OrderItem orderItem : orderItemList)
-                            itemRepositoryImpl.addItemQuantity(orderItem.getItem()
-                                    .getId(), orderItem.getOrderCount());
+                case ORDER_CANCELLATION_IN_PROGRESS:
+                    if (Duration.between(order.getModifiedAt(), LocalDateTime.now())
+                            .toDays() == 1) {
+                        order.updateOrderStatus(OrderStatus.ORDER_CANCELED_BY_USER);
+                        feignOrderToItemService.addItemQuantity(order.getItemId(), order.getOrderCount());
+                        orderRepository.saveAndFlush(order);
                     }
                 default:
                     throw new RuntimeException("orderTimeCheck 오류 발생");
             }
         }
-    } */
+    }
 
 
 }

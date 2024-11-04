@@ -87,7 +87,9 @@ public class ItemController {
         return ResponseEntity.ok(responseMessage);
     }
 
-    // Eureka  통신
+    // Eureka
+
+    // 하나 가져오기
     @GetMapping("/eureka/{itemId}")
     public ItemDetailResponseDto getEurekaItemDetail(
             @PathVariable
@@ -95,5 +97,25 @@ public class ItemController {
 
         return itemService.getEurekaItemDetail(itemId);
     }
+
+    // 상품 감소
+    @PutMapping("/eureka/{itemId}/reduce/{quantity}")
+    public void eurekaReduceItemQuantity(
+            @PathVariable("itemId")
+            Long itemId,
+            @PathVariable("quantity")
+            Integer quantity) {
+        itemService.eurekaReduceItemQuantity(itemId, quantity);
+    }    // 상품 수정
+
+    @PutMapping("/eureka/{itemId}/add//{orderCount}")
+    public void addItemQuantity(
+            @PathVariable("itemId")
+            Long itemId,
+            @PathVariable("quantity")
+            Integer orderCount) {
+        itemService.eurekaAddItemQuantity(itemId, orderCount);
+    }
+
 
 }

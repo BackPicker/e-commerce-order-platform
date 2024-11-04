@@ -88,4 +88,20 @@ public class ItemService {
                 .map(ItemDetailResponseDto::entityFromDTO)
                 .orElseThrow(() -> new IllegalArgumentException("Item not Found"));
     }
+
+    public void eurekaReduceItemQuantity(Long itemId,
+                                         Integer quantity) {
+        Item item = itemRepository.findById(itemId)
+                .orElseThrow(() -> new NoSuchElementException("Item Not Found"));
+        item.reduceQuantity(quantity);
+        itemRepository.saveAndFlush(item);
+    }
+
+    public void eurekaAddItemQuantity(Long itemId,
+                                      Integer orderCount) {
+        Item item = itemRepository.findById(itemId)
+                .orElseThrow(() -> new NoSuchElementException("Item Not Found"));
+        item.addQuantity(orderCount);
+        itemRepository.saveAndFlush(item);
+    }
 }

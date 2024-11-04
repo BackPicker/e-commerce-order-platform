@@ -8,6 +8,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -40,39 +41,26 @@ public class OrderController {
     }
 
 
-/* 
     @PostMapping
     public ResponseEntity<ResponseMessage> createOrder(
             @RequestBody
             CreateOrderDTO createOrderDTO) {
         // Long userId = new ParseRequestUtil().extractUserIdFromRequest(request);
         return orderService.createOrder(userId, createOrderDTO);
-
-    } */
-
-    /*
-
-     */
-/*
+    }
 
     @DeleteMapping("/{orderId}")
-    public ResponseEntity<Void> cancelOrder(
+    public ResponseEntity<ResponseMessage> cancelOrder(
             @PathVariable
             Long orderId) {
-        User user = getCurrentUser();
+        // Long userId = new ParseRequestUtil().extractUserIdFromRequest(request);
 
-        orderManagerService.cancelOrder(orderId, user);
-        log.info("주문 ID {}가 성공적으로 취소되었습니다.", orderId);
-
-        return ResponseEntity.noContent()
-                .build(); // 204 No Content
+        return orderService.cancelOrder(userId, orderId);
     }
-*/
 
-    // @Transactional
-    // @Scheduled(cron = "0 0 */3 * * *")
-    // public void orderTimeCheck() {
-    //     orderManagerService.orderTimeCheck();
-    // }
+    @Scheduled(cron = "0 0 */3 * * *")
+    public void orderTimeCheck() {
+        orderService.orderTimeCheck();
+    }
 
 }

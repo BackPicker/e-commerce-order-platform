@@ -51,9 +51,7 @@ public class Item extends BaseEntity {
         this.quantity = itemRequestDto.getQuantity();
     }
 
-    public void addQuantity(int quantity) {
-        this.quantity += quantity;
-    }
+
 
     public void reduceQuantity(int orderCount) {
         int totalCount = this.quantity - orderCount;
@@ -61,6 +59,9 @@ public class Item extends BaseEntity {
             throw new NosuchQuantityException("재고가 부족합니다");
         }
         this.quantity = totalCount;
+    }
 
+    public void addQuantity(int orderCount) {
+        this.quantity = this.quantity + orderCount;
     }
 }

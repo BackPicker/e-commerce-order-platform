@@ -31,4 +31,18 @@ public class Order extends BaseEntity {
     @Enumerated(EnumType.STRING)
     private OrderStatus orderStatus;
 
+    public Order(Long userId,
+                 Long itemId,
+                 Integer orderCount,
+                 Long totalOrderPrice) {
+        this.userId          = userId;
+        this.itemId          = itemId;
+        this.orderCount      = orderCount;
+        this.totalOrderPrice = totalOrderPrice;
+        this.orderStatus     = OrderStatus.PAYMENT_STATUS_COMPLETED;
+    }
+
+    public void updateOrderStatus(OrderStatus orderStatus) {
+        this.orderStatus = orderStatus;
+    }
 }
