@@ -25,7 +25,7 @@ public class OrderResponseDto {
                             OrderStatus orderStatus) {
         this.orderId         = orderId;
         this.userId          = userId;
-        this.itemName = itemName;
+        this.itemName        = itemName;
         this.totalOrderPrice = totalOrderPrice;
         this.orderStatus     = orderStatus;
     }

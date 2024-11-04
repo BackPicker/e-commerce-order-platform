@@ -10,6 +10,6 @@ public class Item {
     private Long    itemId;
     private String  itemName;
     private String  category;
-    private long price;
+    private long    price;
     private Integer quantity;
 }

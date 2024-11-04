@@ -42,7 +42,7 @@ public class WishListService {
                                 WishListRequestDto wishListItemDto) {
         Long    paramItemId   = wishListItemDto.getItemId();
         Integer paramQuantity = wishListItemDto.getQuantity();
-        Item item = feignWishListToItemService.getItem(paramItemId);
+        Item    item          = feignWishListToItemService.getItem(paramItemId);
 
         if (wishListRepository.existsByUserIdAndItemId(userId, item.getItemId())) {
             log.info("wishList 가 존재해서 수량을 update 합니다");
