@@ -1,9 +1,9 @@
 package com.back.userservice.controller;
 
 import com.back.common.dto.ResponseMessage;
+import com.back.userservice.dto.EmailRequestDto;
 import com.back.userservice.dto.LoginRequestDto;
 import com.back.userservice.dto.SignupRequestDto;
-import com.back.userservice.entity.User;
 import com.back.userservice.service.UserService;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
@@ -14,6 +14,11 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import javax.crypto.BadPaddingException;
+import javax.crypto.IllegalBlockSizeException;
+import java.security.InvalidAlgorithmParameterException;
+import java.security.InvalidKeyException;
+
 @RestController
 @RequestMapping("/api/user")
 @RequiredArgsConstructor
@@ -23,26 +28,30 @@ public class UserController {
 
     // 회원가입
     @PostMapping("/signup")
-    public ResponseEntity<ResponseMessage> createUser(
+    public ResponseMessage createUser(
             @RequestBody
-            SignupRequestDto signupRequestDto) throws BadRequestException {
-        User createdUser = userService.signup(signupRequestDto);
+            SignupRequestDto signupRequestDto) throws BadRequestException, InvalidAlgorithmParameterException, IllegalBlockSizeException, BadPaddingException, InvalidKeyException {
+        userService.verifyEmail(signupRequestDto.getEmail(), signupRequestDto.getVerifyNumber());
 
-        ResponseMessage response = ResponseMessage.builder()
-                .data(createdUser)
-                .statusCode(201)
-                .resultMessage("회원가입 성공")
-                .build();
-
-        return ResponseEntity.status(201)
-                .body(response);
+        return userService.signup(signupRequestDto);
     }
 
+    // 이메일 인증
+    @PostMapping("/email")
+    public ResponseMessage sendEmail(
+            @RequestBody
+            EmailRequestDto requestDto) throws InvalidAlgorithmParameterException, IllegalBlockSizeException, BadPaddingException, InvalidKeyException {
+
+        return userService.sendVerifyEmail(requestDto.getEmail());
+    }
+
+    // 로그인
     @PostMapping("/login")
     public ResponseEntity<ResponseMessage> login(
             @RequestBody
             LoginRequestDto loginRequestDto,
             HttpServletResponse response) throws BadRequestException {
+
         String token = userService.login(loginRequestDto);
 
         ResponseMessage responseMessage = ResponseMessage.builder()

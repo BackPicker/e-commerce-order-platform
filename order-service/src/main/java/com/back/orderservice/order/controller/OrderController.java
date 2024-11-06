@@ -1,6 +1,7 @@
 package com.back.orderservice.order.controller;
 
 import com.back.common.dto.ResponseMessage;
+import com.back.common.utils.ParseRequestUtil;
 import com.back.orderservice.order.dto.CreateOrderDTO;
 import com.back.orderservice.order.dto.OrderResponseDto;
 import com.back.orderservice.order.service.OrderService;
@@ -19,13 +20,12 @@ import java.util.List;
 @RequiredArgsConstructor
 public class OrderController {
 
-    static final Long userId = 1L;
 
     private final OrderService orderService;
 
     @GetMapping
     public ResponseEntity<List<OrderResponseDto>> getOrders(HttpServletRequest request) {
-        // Long userId = new ParseRequestUtil().extractUserIdFromRequest(request);
+        Long userId = new ParseRequestUtil().extractUserIdFromRequest(request);
 
         return orderService.getOrders(userId);
     }
@@ -35,7 +35,7 @@ public class OrderController {
             @PathVariable("orderId")
             Long orderId,
             HttpServletRequest request) {
-        // Long userId = new ParseRequestUtil().extractUserIdFromRequest(request);
+        Long userId = new ParseRequestUtil().extractUserIdFromRequest(request);
 
         return orderService.getOneOrder(orderId, userId);
     }
@@ -44,16 +44,18 @@ public class OrderController {
     @PostMapping
     public ResponseEntity<ResponseMessage> createOrder(
             @RequestBody
-            CreateOrderDTO createOrderDTO) {
-        // Long userId = new ParseRequestUtil().extractUserIdFromRequest(request);
+            CreateOrderDTO createOrderDTO,
+            HttpServletRequest request) {
+        Long userId = new ParseRequestUtil().extractUserIdFromRequest(request);
         return orderService.createOrder(userId, createOrderDTO);
     }
 
     @DeleteMapping("/{orderId}")
     public ResponseEntity<ResponseMessage> cancelOrder(
             @PathVariable
-            Long orderId) {
-        // Long userId = new ParseRequestUtil().extractUserIdFromRequest(request);
+            Long orderId,
+            HttpServletRequest request) {
+        Long userId = new ParseRequestUtil().extractUserIdFromRequest(request);
 
         return orderService.cancelOrder(userId, orderId);
     }

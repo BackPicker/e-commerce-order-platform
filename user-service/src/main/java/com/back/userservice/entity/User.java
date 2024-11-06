@@ -27,8 +27,7 @@ public class User {
     private String email; // 회원 이메일
 
     @Column(nullable = false)
-    @Embedded
-    private Address address; // 회원 주소
+    private String address; // 회원 주소
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
@@ -43,7 +42,7 @@ public class User {
                 String password,
                 String phoneNumber,
                 String email,
-                Address address,
+                String address,
                 UserRoleEnum role) {
         this.username    = username;
         this.password    = password;

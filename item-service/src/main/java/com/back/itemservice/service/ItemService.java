@@ -38,6 +38,14 @@ public class ItemService {
         return new ItemResponseDto(save);
     }
 
+    @Cacheable(cacheNames = "itemCache", key = "'item:' + args[0]", cacheManager = "cacheManager")
+    public ItemDetailResponseDto getItemDetail(Long itemId) {
+        ItemDetailResponseDto dtoItem = itemRepository.findById(itemId)
+                .map(ItemDetailResponseDto::entityFromDTO)
+                .orElseThrow(() -> new IllegalArgumentException("Item not Found"));
+        return dtoItem;
+    }
+
 
     @Cacheable(cacheNames = "itemAllCache", cacheManager = "cacheManager")
     public List<ItemResponseDto> getItems(int page,
@@ -52,13 +60,6 @@ public class ItemService {
     }
 
 
-    @Cacheable(cacheNames = "itemCache", key = "'item:' + args[0]", cacheManager = "cacheManager")
-    public ItemDetailResponseDto getItemDetail(Long itemId) {
-        ItemDetailResponseDto dtoItem = itemRepository.findById(itemId)
-                .map(ItemDetailResponseDto::entityFromDTO)
-                .orElseThrow(() -> new IllegalArgumentException("Item not Found"));
-        return dtoItem;
-    }
 
     @Transactional
     @CachePut(cacheNames = "itemCache", key = "'item:' + args[0]", cacheManager = "cacheManager")

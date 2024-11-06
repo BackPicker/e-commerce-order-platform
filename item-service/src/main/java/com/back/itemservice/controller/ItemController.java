@@ -56,6 +56,7 @@ public class ItemController {
         return itemService.getItemDetail(itemId);
     }
 
+    // 상품 수정
     @PutMapping("/{itemId}")
     public ResponseEntity<ResponseMessage> updateItem(
             @PathVariable("itemId")
@@ -73,6 +74,7 @@ public class ItemController {
                 .body(responseMessage);
     }
 
+    //상품 삭젠
     @DeleteMapping("/{itemId}")
     public ResponseEntity<ResponseMessage> deleteItemDetail(
             @PathVariable("itemId")
