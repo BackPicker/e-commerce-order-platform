@@ -90,6 +90,7 @@ public class OrderService {
         log.info("주문 생성 시도: 사용자 ID: {}, 아이템 ID: {}", userId, itemId);
 
         Item item = feignOrderToItemService.eurekaItem(itemId);
+
         if (item.getQuantity() < orderCount) {
             throw new InsufficientStockException("재고가 부족합니다. 현재 재고: " + item.getQuantity());
         }
@@ -101,13 +102,16 @@ public class OrderService {
             throw new IllegalArgumentException(
                     "결제 금액을 올바르게 입력하세요 결제해야 할 금액은 " + totalOrderPrice + " 입니다, 주문 금액은 " + createOrderDTO.getPayment());
         }
+
         // 재고 감소 후 주문 저장
         feignOrderToItemService.reduceItemQuantity(itemId, orderCount);
         // User 의 Money 추가해서, 감소시키는 로직 추가?
 
-        //
+        // 주문 Entity 만들고 저장
         Order order = new Order(userId, item.getItemId(), orderCount, totalOrderPrice);
         orderRepository.save(order);
+
+
         ResponseMessage build = ResponseMessage.builder()
                 .data(order)
                 .statusCode(200)
