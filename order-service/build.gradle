@@ -37,6 +37,9 @@ dependencies {
     implementation 'org.springframework.session:spring-session-data-redis'
     implementation 'org.redisson:redisson-spring-boot-starter:3.22.1'
 
+    // kafka 설정
+    implementation 'org.springframework.kafka:spring-kafka'
+
 }
 
 dependencyManagement {

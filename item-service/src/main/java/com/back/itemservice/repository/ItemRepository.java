@@ -20,4 +20,7 @@ public interface ItemRepository extends JpaRepository<Item, Long> {
     Item customFindById(
             @Param("itemId")
             Long itemId);
+
+    @Query("select i.quantity from Item  i where i.id = :itemId")
+    Integer findItemQuantityByItemId(@Param("itemId") Long itemId);
 }

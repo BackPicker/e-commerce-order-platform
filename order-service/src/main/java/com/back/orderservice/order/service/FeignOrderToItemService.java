@@ -1,6 +1,7 @@
 package com.back.orderservice.order.service;
 
 import com.back.orderservice.order.dto.Item;
+import com.back.orderservice.order.dto.ItemQuantityResponseDto;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -11,6 +12,11 @@ public interface FeignOrderToItemService {
 
     @GetMapping("/api/items/eureka/{itemId}")
     Item eurekaItem(
+            @PathVariable("itemId")
+            Long itemId);
+
+    @GetMapping("/api/items/eureka/{itemId}/quantity")
+    ItemQuantityResponseDto getItemQuantity(
             @PathVariable("itemId")
             Long itemId);
 
@@ -27,4 +33,6 @@ public interface FeignOrderToItemService {
             Long itemId,
             @PathVariable("orderCount")
             Integer orderCount);
+
+
 }

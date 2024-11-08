@@ -3,6 +3,7 @@ package com.back.itemservice.service;
 
 import com.back.itemservice.domain.Item;
 import com.back.itemservice.dto.ItemDetailResponseDto;
+import com.back.itemservice.dto.ItemQuantityResponseDto;
 import com.back.itemservice.dto.ItemRequestDto;
 import com.back.itemservice.dto.ItemResponseDto;
 import com.back.itemservice.repository.ItemRepository;
@@ -90,6 +91,11 @@ public class ItemService {
                 .orElseThrow(() -> new IllegalArgumentException("Item not Found"));
     }
 
+    public ItemQuantityResponseDto getEurekaItemQuantity(Long itemId) {
+        Integer itemQuantity = itemRepository.findItemQuantityByItemId(itemId);
+        return new ItemQuantityResponseDto(itemQuantity);
+    }
+
     public void eurekaReduceItemQuantity(Long itemId,
                                          Integer quantity) {
         Item item = itemRepository.findById(itemId)
@@ -105,4 +111,6 @@ public class ItemService {
         item.addQuantity(orderCount);
         itemRepository.saveAndFlush(item);
     }
+
+
 }

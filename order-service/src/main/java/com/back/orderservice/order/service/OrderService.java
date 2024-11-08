@@ -1,5 +1,6 @@
 package com.back.orderservice.order.service;
 
+
 import com.back.common.dto.ResponseMessage;
 import com.back.orderservice.order.domain.Order;
 import com.back.orderservice.order.domain.OrderStatus;
@@ -11,8 +12,10 @@ import com.back.orderservice.order.repository.OrderRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 
 import java.time.Duration;
@@ -28,7 +31,9 @@ import java.util.NoSuchElementException;
 public class OrderService {
 
     private final OrderRepository         orderRepository;
-    private final FeignOrderToItemService feignOrderToItemService;
+    private final FeignOrderToItemService       feignOrderToItemService;
+    private final RedisTemplate<String, Object> redisTemplate;
+    private final KafkaTemplate<String, Order>  kafkaTemplate;
 
 
     /**
@@ -87,12 +92,26 @@ public class OrderService {
         Integer orderCount = createOrderDTO.getOrderCount();
         long    payment    = createOrderDTO.getPayment();
 
-        log.info("주문 생성 시도: 사용자 ID: {}, 아이템 ID: {}", userId, itemId);
+        // RedisTemplate을 사용하여 데이터 가져오기
+        String cacheKey = "itemId:" + itemId + ":quantity";
+        Integer redisItemQuantity = (Integer) redisTemplate.opsForValue()
+                .get(cacheKey);
+
+        if (redisItemQuantity == null) {
+            // Redis에 값이 없으면, feign을 통해 재고 수량 가져오기
+            redisItemQuantity = feignOrderToItemService.getItemQuantity(itemId)
+                    .getQuantity();
+
+            // Redis에 값을 저장할 때 Integer 값을 저장
+            redisTemplate.opsForValue()
+                    .set(cacheKey, redisItemQuantity);
+        }
 
         Item item = feignOrderToItemService.eurekaItem(itemId);
 
-        if (item.getQuantity() < orderCount) {
-            throw new InsufficientStockException("재고가 부족합니다. 현재 재고: " + item.getQuantity());
+        // 주문 수량이 재고보다 크거나, redis 수 량이 0인 경우
+        if (redisItemQuantity < orderCount || redisItemQuantity == 0) {
+            throw new InsufficientStockException("재고가 부족합니다. 현재 재고: " + redisItemQuantity);
         }
 
         long totalOrderPrice = orderCount * item.getPrice();
@@ -103,14 +122,17 @@ public class OrderService {
                     "결제 금액을 올바르게 입력하세요 결제해야 할 금액은 " + totalOrderPrice + " 입니다, 주문 금액은 " + createOrderDTO.getPayment());
         }
 
+        // Redis의 재고 감소
+        redisTemplate.opsForValue()
+                .decrement(cacheKey, orderCount);
+
         // 재고 감소 후 주문 저장
-        feignOrderToItemService.reduceItemQuantity(itemId, orderCount);
+        // feignOrderToItemService.reduceItemQuantity(itemId, orderCount);
         // User 의 Money 추가해서, 감소시키는 로직 추가?
 
         // 주문 Entity 만들고 저장
         Order order = new Order(userId, item.getItemId(), orderCount, totalOrderPrice);
-        orderRepository.save(order);
-
+        kafkaTemplate.send("order_create", order);
 
         ResponseMessage build = ResponseMessage.builder()
                 .data(order)

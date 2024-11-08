@@ -3,6 +3,7 @@ package com.back.itemservice.controller;
 
 import com.back.common.dto.ResponseMessage;
 import com.back.itemservice.dto.ItemDetailResponseDto;
+import com.back.itemservice.dto.ItemQuantityResponseDto;
 import com.back.itemservice.dto.ItemRequestDto;
 import com.back.itemservice.dto.ItemResponseDto;
 import com.back.itemservice.repository.ItemRepository;
@@ -98,6 +99,14 @@ public class ItemController {
             Long itemId) {
 
         return itemService.getEurekaItemDetail(itemId);
+    }
+
+    @GetMapping("/eureka/{itemId}/quantity")
+    public ItemQuantityResponseDto getEurekaItemQuantity(
+            @PathVariable("itemId")
+            Long itemId) {
+        return itemService.getEurekaItemQuantity(itemId);
+
     }
 
     // 상품 감소

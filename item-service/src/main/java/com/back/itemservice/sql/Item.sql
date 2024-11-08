@@ -6,7 +6,6 @@ INSERT INTO item (item_name, category, price, quantity, created_at, is_delete)
 WITH RECURSIVE cte (n) AS (SELECT 1
                            UNION ALL
                            SELECT n + 1
-
                            FROM cte
                            WHERE n < 1000 -- 생성하고 싶은 더미 데이터의 개수
 )
