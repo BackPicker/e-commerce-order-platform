@@ -35,13 +35,6 @@ public class User {
     @Column(nullable = false)
     private UserRoleEnum role;
 
-    @PrePersist
-    protected void onCreate() {
-        if (this.role == null) {
-            this.role = UserRoleEnum.USER;
-        }
-    }
-
     public User(String username,
                 String password,
                 String phoneNumber,
@@ -54,5 +47,12 @@ public class User {
         this.email       = email;
         this.address     = address;
         this.role        = role;
+    }
+
+    @PrePersist
+    protected void onCreate() {
+        if (this.role == null) {
+            this.role = UserRoleEnum.USER;
+        }
     }
 }

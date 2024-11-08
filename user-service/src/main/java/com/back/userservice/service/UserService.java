@@ -45,6 +45,10 @@ public class UserService {
     @Value("${admin.token}")
     private String ADMIN_TOKEN;
 
+    public static void createNumber() {
+        authNum = (int) (Math.random() * (90000)) + 100000;
+    }
+
     public void verifyEmail(String verifyEmail,
                             String verifyNumber) {
         String redisNumber = redisTemplate.opsForValue()
@@ -112,10 +116,6 @@ public class UserService {
     public String sendMail(String mail) {
         sendEmail(mail);
         return String.valueOf(authNum);
-    }
-
-    public static void createNumber() {
-        authNum = (int) (Math.random() * (90000)) + 100000;
     }
 
     public void sendEmail(String emailParam) {

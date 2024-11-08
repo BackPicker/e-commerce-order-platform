@@ -75,7 +75,7 @@ public class ItemController {
                 .body(responseMessage);
     }
 
-    //상품 삭젠
+    // 상품 삭젠
     @DeleteMapping("/{itemId}")
     public ResponseEntity<ResponseMessage> deleteItemDetail(
             @PathVariable("itemId")
