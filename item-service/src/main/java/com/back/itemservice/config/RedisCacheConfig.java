@@ -49,15 +49,21 @@ public class RedisCacheConfig {
     }
 
     @Bean
-    public RedisTemplate<String, Object> redisTemplate(RedisConnectionFactory connectionFactory) {
-        RedisTemplate<String, Object> template = new RedisTemplate<>();
-        template.setConnectionFactory(connectionFactory);
-        return template;
+    public RedisTemplate<String, Object> redisTemplate() {
+        RedisTemplate<String, Object> redisTemplate = new RedisTemplate<>();
+
+        // Redisson ConnectionFactory 설정
+        redisTemplate.setConnectionFactory(redissonConnectionFactory());
+
+        // Key와 Value의 직렬화 방식 설정
+        redisTemplate.setKeySerializer(new StringRedisSerializer());
+        redisTemplate.setValueSerializer(new GenericJackson2JsonRedisSerializer());
+
+        return redisTemplate;
     }
 
     @Bean
     public CacheManager cacheManager(RedissonConnectionFactory redisConnectionFactory) {
-
         // 복잡한 다형성
         BasicPolymorphicTypeValidator ptv = BasicPolymorphicTypeValidator.builder()
                 .allowIfBaseType(Object.class)

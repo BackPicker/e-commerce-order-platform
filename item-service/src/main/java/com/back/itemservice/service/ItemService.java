@@ -84,6 +84,8 @@ public class ItemService {
         itemRepository.delete(item);
     }
 
+
+    // Feign을 이용한 통신
     public ItemDetailResponseDto getEurekaItemDetail(Long itemId) {
         return itemRepository.findById(itemId)
                 .map(ItemDetailResponseDto::entityFromDTO)

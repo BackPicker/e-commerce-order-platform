@@ -94,14 +94,30 @@ public class OrderService {
 
         // RedisTemplate을 사용하여 데이터 가져오기
         String cacheKey = "itemId:" + itemId + ":quantity";
-        Integer redisItemQuantity = (Integer) redisTemplate.opsForValue()
+        Integer redisItemQuantity = null;
+
+        try {
+            redisItemQuantity = (Integer) redisTemplate.opsForValue()
                 .get(cacheKey);
+        } catch (Exception e) {
+            log.error("Redis 연결 실패, {}", e.getMessage());
+            // 재시도
+            try {
+                redisItemQuantity = feignOrderToItemService.getItemQuantity(itemId)
+                        .getQuantity();
+                // Redis가 실패한 경우 DB에서 재고를 다시 Redis에 저장
+                redisTemplate.opsForValue()
+                        .set(cacheKey, redisItemQuantity);
+            } catch (Exception dbException) {
+                log.error("DB에서 재고를 가져오는 데 실패했습니다, {}", dbException.getMessage());
+                throw new RuntimeException("재고 정보를 가져오는 데 실패했습니다. 시스템 관리자에게 문의하세요.");
+            }
+        }
 
         if (redisItemQuantity == null) {
             // Redis에 값이 없으면, feign을 통해 재고 수량 가져오기
             redisItemQuantity = feignOrderToItemService.getItemQuantity(itemId)
                     .getQuantity();
-
             // Redis에 값을 저장할 때 Integer 값을 저장
             redisTemplate.opsForValue()
                     .set(cacheKey, redisItemQuantity);
@@ -123,12 +139,16 @@ public class OrderService {
         }
 
         // Redis의 재고 감소
-        redisTemplate.opsForValue()
-                .decrement(cacheKey, orderCount);
+        try {
+            redisTemplate.opsForValue()
+                    .decrement(cacheKey, orderCount);
+        } catch (Exception e) {
+            log.error("Redis에 재고를 감소시키는 데 실패했습니다, {}", e.getMessage());
+            // 재고 감소 실패 시, DB에서 재고 감소 처리를 추가할 수 있음 (혹은 대체 처리)
+            throw new RuntimeException("재고를 감소시키는 데 실패했습니다. 시스템 관리자에게 문의하세요.");
+        }
 
         // 재고 감소 후 주문 저장
-        // feignOrderToItemService.reduceItemQuantity(itemId, orderCount);
-        // User 의 Money 추가해서, 감소시키는 로직 추가?
 
         // 주문 Entity 만들고 저장
         Order order = new Order(userId, item.getItemId(), orderCount, totalOrderPrice);
