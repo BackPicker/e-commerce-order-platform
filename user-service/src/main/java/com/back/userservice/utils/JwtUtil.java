@@ -18,12 +18,12 @@ import java.util.Map;
 @Slf4j(topic = "JwtUtil")
 @Component
 public class JwtUtil {
-    public static final String BEARER_PREFIX = "Bearer ";
-    private final       long   TOKEN_TIME    = 60 * 60 * 1000L;
-    private final SignatureAlgorithm signatureAlgorithm = SignatureAlgorithm.HS256;
+    public static final String             BEARER_PREFIX      = "Bearer ";
+    private final       long               TOKEN_TIME         = 60 * 60 * 1000L;
+    private final       SignatureAlgorithm signatureAlgorithm = SignatureAlgorithm.HS256;
     @Value("${jwt.secret.key}")
-    private       String             secretKey;
-    private       Key                key;
+    private             String             secretKey;
+    private             Key                key;
 
     @PostConstruct
     public void init() {

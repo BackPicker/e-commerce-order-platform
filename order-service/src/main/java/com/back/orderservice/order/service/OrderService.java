@@ -177,7 +177,7 @@ public class OrderService {
                     }
                 } catch (Exception e) {
                     log.error("Redis에서 재고 정보를 가져오는 중 오류 발생. error: {}", e.getMessage());
-                    throw new RuntimeException("Redis에서 재고 정보를 가져오는 중 오류가 발생했습니다.");
+                    throw new RuntimeException("Redis 에서 재고 정보를 가져오는 중 오류가 발생했습니다.");
                 } finally {
                     // 락 해제
                     lock.unlock();
@@ -213,7 +213,7 @@ public class OrderService {
 
         // Redis에서 아이템 ID와 관련된 재고를 갱신하기 위한 키 생성
         String cacheKey = "itemId:" + order.getItemId() + ":quantity";
-        String lockKey = "itemId:" + order.getItemId() + ":lock";  // 분산 락을 위한 키
+        String lockKey = "itemId:" + order.getItemId() + ":lock";
 
         // 주문 상태에 따라 다르게 처리
         switch (order.getOrderStatus()) {
