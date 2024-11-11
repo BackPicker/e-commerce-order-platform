@@ -12,6 +12,8 @@ import com.back.orderservice.order.repository.OrderRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.redisson.api.RLock;
+import org.redisson.api.RedissonClient;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -23,6 +25,7 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.NoSuchElementException;
+import java.util.concurrent.TimeUnit;
 
 
 @Slf4j
@@ -32,6 +35,8 @@ public class OrderService {
 
     private final OrderRepository               orderRepository;
     private final FeignOrderToItemService       feignOrderToItemService;
+
+    private final RedissonClient redissonClient;
     private final RedisTemplate<String, Object> redisTemplate;
     private final KafkaTemplate<String, Order>  kafkaTemplate;
 
@@ -88,7 +93,7 @@ public class OrderService {
     @Transactional
     public ResponseEntity<ResponseMessage> createOrder(Long userId,
                                                        CreateOrderDTO createOrderDTO) {
-        Long itemId  = createOrderDTO.getItemId();
+        Long itemId = createOrderDTO.getItemId();
         Integer orderCount = createOrderDTO.getOrderCount();
         long payment = createOrderDTO.getPayment();
 
@@ -97,6 +102,7 @@ public class OrderService {
 
         // Redis에서 재고 수량 조회
         Integer redisItemQuantity = getItemStockFromRedis(cacheKey, lockKey, itemId);
+
         if (redisItemQuantity == null) {
             throw new RuntimeException("재고 정보를 가져오는 데 실패했습니다.");
         }
@@ -143,39 +149,48 @@ public class OrderService {
 
     /**
      * Redis에서 재고를 안전하게 가져오기 위한 메서드
+     * Redisson을 사용하여 분산 락을 처리
      */
     private Integer getItemStockFromRedis(String cacheKey,
                                           String lockKey,
                                           Long itemId) {
         Integer redisItemQuantity = null;
 
-        // Redis 분산 락을 사용하여 재고 정보에 접근
-        Boolean isLocked = redisTemplate.opsForValue()
-                .setIfAbsent(lockKey, "LOCKED", Duration.ofSeconds(10));
-        if (isLocked != null && isLocked) {
-            try {
-                // Redis에서 재고 가져오기
-                redisItemQuantity = (Integer) redisTemplate.opsForValue()
-                        .get(cacheKey);
+        // Redisson을 사용하여 락을 획득
+        RLock lock = redissonClient.getLock(lockKey);
 
-                if (redisItemQuantity == null) {
-                    // Redis에 값이 없으면 DB에서 가져오기
-                    redisItemQuantity = feignOrderToItemService.getItemQuantity(itemId)
-                            .getQuantity();
-                    // Redis에 재고 값 저장
-                    redisTemplate.opsForValue()
-                            .set(cacheKey, redisItemQuantity);
+        try {
+            // 락을 10초 동안 기다리며 획득
+            if (lock.tryLock(10, 10, TimeUnit.SECONDS)) {
+                try {
+                    // Redis에서 재고 가져오기
+                    redisItemQuantity = (Integer) redisTemplate.opsForValue()
+                            .get(cacheKey);
+
+                    if (redisItemQuantity == null) {
+                        // Redis에 값이 없으면 DB에서 가져오기
+                        redisItemQuantity = feignOrderToItemService.getItemQuantity(itemId)
+                                .getQuantity();
+                        // Redis에 재고 값 저장
+                        redisTemplate.opsForValue()
+                                .set(cacheKey, redisItemQuantity);
+                    }
+                } catch (Exception e) {
+                    log.error("Redis에서 재고 정보를 가져오는 중 오류 발생. error: {}", e.getMessage());
+                    throw new RuntimeException("Redis에서 재고 정보를 가져오는 중 오류가 발생했습니다.");
+                } finally {
+                    // 락 해제
+                    lock.unlock();
                 }
-            } catch (Exception e) {
-                log.error("Redis에서 재고 정보를 가져오는 중 오류 발생. error: {}", e.getMessage());
-                throw new RuntimeException("Redis에서 재고 정보를 가져오는 중 오류가 발생했습니다.");
-            } finally {
-                // 분산 락 해제
-                redisTemplate.delete(lockKey);
+            } else {
+                log.warn("다른 프로세스가 Redis 잠금을 보유하고 있어 재고를 가져올 수 없습니다.");
             }
-        } else {
-            log.warn("다른 프로세스가 Redis 잠금을 보유하고 있어 재고를 가져올 수 없습니다.");
+        } catch (InterruptedException e) {
+            Thread.currentThread()
+                    .interrupt();  // 인터럽트 처리
+            log.error("Redisson 락 대기 중 오류 발생: {}", e.getMessage());
         }
+
         return redisItemQuantity;
     }
 
@@ -198,9 +213,9 @@ public class OrderService {
 
         // Redis에서 아이템 ID와 관련된 재고를 갱신하기 위한 키 생성
         String cacheKey = "itemId:" + order.getItemId() + ":quantity";
-        String lockKey  = "itemId:" + order.getItemId() + ":lock";
+        String lockKey = "itemId:" + order.getItemId() + ":lock";  // 분산 락을 위한 키
 
-        // 주문 상태
+        // 주문 상태에 따라 다르게 처리
         switch (order.getOrderStatus()) {
             case PAYMENT_STATUS_COMPLETED:  // 결제 완료 상태
                 // 주문 상태를 취소 상태로 변경
@@ -251,6 +266,7 @@ public class OrderService {
         }
     }
 
+
     /**
      * Redis에서 재고 수량을 안전하게 증가시키는 메서드
      */
@@ -258,36 +274,47 @@ public class OrderService {
                                     String lockKey,
                                     Long itemId,
                                     Integer orderCount) {
-        Boolean isLocked = redisTemplate.opsForValue()
-                .setIfAbsent(lockKey, "LOCKED", Duration.ofSeconds(10));
-        if (isLocked != null && isLocked) {
-            try {
-                // Redis에서 아이템의 수량을 가져옴
-                Integer currentStock = (Integer) redisTemplate.opsForValue()
-                        .get(cacheKey);
+        // Redisson에서 락을 획득
+        RLock lock = redissonClient.getLock(lockKey);  // RedissonClient를 통해 락을 가져옵니다.
 
-                if (currentStock != null) {
-                    // 현재 재고가 존재하면 재고를 증가시킴
-                    redisTemplate.opsForValue()
-                            .increment(cacheKey, orderCount);
-                } else {
-                    // Redis에 재고 값이 없다면 DB에서 재고를 가져오고, Redis에 저장
-                    Integer dbStock = feignOrderToItemService.getItemQuantity(itemId)
-                            .getQuantity();
-                    redisTemplate.opsForValue()
-                            .set(cacheKey, dbStock + orderCount);
+        try {
+            // 락을 10초 동안 기다리며 획득
+            if (lock.tryLock(10, 10, TimeUnit.SECONDS)) {
+                try {
+                    // Redis에서 아이템의 수량을 가져옴
+                    Integer currentStock = (Integer) redisTemplate.opsForValue()
+                            .get(cacheKey);
+
+                    if (currentStock != null) {
+                        // 현재 재고가 존재하면 재고를 증가시킴
+                        redisTemplate.opsForValue()
+                                .increment(cacheKey, orderCount);
+                    } else {
+                        // Redis에 재고 값이 없다면 DB에서 재고를 가져오고, Redis에 저장
+                        Integer dbStock = feignOrderToItemService.getItemQuantity(itemId)
+                                .getQuantity();
+                        redisTemplate.opsForValue()
+                                .set(cacheKey, dbStock + orderCount);
+                    }
+                } catch (Exception e) {
+                    log.error("Redis에서 재고 수량을 업데이트하는 중 오류 발생: {}", e.getMessage());
+                    throw new RuntimeException("재고를 업데이트하는 데 실패했습니다.");
                 }
-            } catch (Exception e) {
-                log.error("Redis에서 재고 수량을 업데이트하는 중 오류 발생: {}", e.getMessage());
-                throw new RuntimeException("재고를 업데이트하는 데 실패했습니다.");
-            } finally {
-                // 락 해제
-                redisTemplate.delete(lockKey);
+            } else {
+                log.warn("다른 프로세스가 Redis 잠금을 보유하고 있어 재고를 업데이트할 수 없습니다.");
             }
-        } else {
-            log.warn("다른 프로세스가 Redis 잠금을 보유하고 있어 재고를 업데이트할 수 없습니다.");
+        } catch (InterruptedException e) {
+            Thread.currentThread()
+                    .interrupt();  // 인터럽트 처리
+            log.error("Redisson 락 대기 중 인터럽트 발생: {}", e.getMessage());
+        } finally {
+            // 락을 해제
+            if (lock.isHeldByCurrentThread()) {
+                lock.unlock();
+            }
         }
     }
+
 
     @Transactional
     public void orderTimeCheck() {
