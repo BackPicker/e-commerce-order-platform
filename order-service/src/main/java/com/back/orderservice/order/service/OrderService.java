@@ -88,135 +88,204 @@ public class OrderService {
     @Transactional
     public ResponseEntity<ResponseMessage> createOrder(Long userId,
                                                        CreateOrderDTO createOrderDTO) {
-        Long    itemId     = createOrderDTO.getItemId();
+        Long itemId  = createOrderDTO.getItemId();
         Integer orderCount = createOrderDTO.getOrderCount();
-        long    payment    = createOrderDTO.getPayment();
+        long payment = createOrderDTO.getPayment();
 
-        // RedisTemplate을 사용하여 데이터 가져오기
         String cacheKey = "itemId:" + itemId + ":quantity";
-        Integer redisItemQuantity = null;
+        String lockKey = "itemId:" + itemId + ":lock";
 
-        try {
-            redisItemQuantity = (Integer) redisTemplate.opsForValue()
-                .get(cacheKey);
-        } catch (Exception e) {
-            log.error("Redis 연결 실패, {}", e.getMessage());
-            // 재시도
-            try {
-                redisItemQuantity = feignOrderToItemService.getItemQuantity(itemId)
-                        .getQuantity();
-                // Redis가 실패한 경우 DB에서 재고를 다시 Redis에 저장
-                redisTemplate.opsForValue()
-                        .set(cacheKey, redisItemQuantity);
-            } catch (Exception dbException) {
-                log.error("DB에서 재고를 가져오는 데 실패했습니다, {}", dbException.getMessage());
-                throw new RuntimeException("재고 정보를 가져오는 데 실패했습니다. 시스템 관리자에게 문의하세요.");
-            }
-        }
-
+        // Redis에서 재고 수량 조회
+        Integer redisItemQuantity = getItemStockFromRedis(cacheKey, lockKey, itemId);
         if (redisItemQuantity == null) {
-            // Redis에 값이 없으면, feign을 통해 재고 수량 가져오기
-            redisItemQuantity = feignOrderToItemService.getItemQuantity(itemId)
-                    .getQuantity();
-            // Redis에 값을 저장할 때 Integer 값을 저장
-            redisTemplate.opsForValue()
-                    .set(cacheKey, redisItemQuantity);
+            throw new RuntimeException("재고 정보를 가져오는 데 실패했습니다.");
         }
 
         Item item = feignOrderToItemService.eurekaItem(itemId);
 
-        // 주문 수량이 재고보다 크거나, redis 수 량이 0인 경우
+        // 주문 수량이 재고보다 크거나 재고가 0인 경우 예외 처리
         if (redisItemQuantity < orderCount || redisItemQuantity == 0) {
             throw new InsufficientStockException("재고가 부족합니다. 현재 재고: " + redisItemQuantity);
         }
 
         long totalOrderPrice = orderCount * item.getPrice();
 
-        // 결제 시도
+        // 결제 금액 확인
         if (payment != totalOrderPrice) {
             throw new IllegalArgumentException(
-                    "결제 금액을 올바르게 입력하세요 결제해야 할 금액은 " + totalOrderPrice + " 입니다, 주문 금액은 " + createOrderDTO.getPayment());
+                    "결제 금액을 올바르게 입력하세요. 결제해야 할 금액은 " + totalOrderPrice + " 입니다, 주문 금액은 " + createOrderDTO.getPayment());
         }
 
-        // Redis의 재고 감소
+        // Redis에서 재고 감소
         try {
             redisTemplate.opsForValue()
                     .decrement(cacheKey, orderCount);
         } catch (Exception e) {
-            log.error("Redis에 재고를 감소시키는 데 실패했습니다, {}", e.getMessage());
-            // 재고 감소 실패 시, DB에서 재고 감소 처리를 추가할 수 있음 (혹은 대체 처리)
+            log.error("Redis에서 재고를 감소시키는 데 실패했습니다. error: {}", e.getMessage());
             throw new RuntimeException("재고를 감소시키는 데 실패했습니다. 시스템 관리자에게 문의하세요.");
         }
 
-        // 재고 감소 후 주문 저장
-
-        // 주문 Entity 만들고 저장
+        // 주문 Entity 생성 및 저장
         Order order = new Order(userId, item.getItemId(), orderCount, totalOrderPrice);
+        orderRepository.save(order);
+
+        // Kafka 메시지 발송 (주문 생성 이벤트)
         kafkaTemplate.send("order_create", order);
 
-        ResponseMessage build = ResponseMessage.builder()
+        ResponseMessage responseMessage = ResponseMessage.builder()
                 .data(order)
                 .statusCode(200)
-                .resultMessage("주문이 성공했습니다")
+                .resultMessage("주문이 성공했습니다.")
                 .build();
-        return ResponseEntity.ok(build);
+
+        return ResponseEntity.ok(responseMessage);
+    }
+
+    /**
+     * Redis에서 재고를 안전하게 가져오기 위한 메서드
+     */
+    private Integer getItemStockFromRedis(String cacheKey,
+                                          String lockKey,
+                                          Long itemId) {
+        Integer redisItemQuantity = null;
+
+        // Redis 분산 락을 사용하여 재고 정보에 접근
+        Boolean isLocked = redisTemplate.opsForValue()
+                .setIfAbsent(lockKey, "LOCKED", Duration.ofSeconds(10));
+        if (isLocked != null && isLocked) {
+            try {
+                // Redis에서 재고 가져오기
+                redisItemQuantity = (Integer) redisTemplate.opsForValue()
+                        .get(cacheKey);
+
+                if (redisItemQuantity == null) {
+                    // Redis에 값이 없으면 DB에서 가져오기
+                    redisItemQuantity = feignOrderToItemService.getItemQuantity(itemId)
+                            .getQuantity();
+                    // Redis에 재고 값 저장
+                    redisTemplate.opsForValue()
+                            .set(cacheKey, redisItemQuantity);
+                }
+            } catch (Exception e) {
+                log.error("Redis에서 재고 정보를 가져오는 중 오류 발생. error: {}", e.getMessage());
+                throw new RuntimeException("Redis에서 재고 정보를 가져오는 중 오류가 발생했습니다.");
+            } finally {
+                // 분산 락 해제
+                redisTemplate.delete(lockKey);
+            }
+        } else {
+            log.warn("다른 프로세스가 Redis 잠금을 보유하고 있어 재고를 가져올 수 없습니다.");
+        }
+        return redisItemQuantity;
     }
 
 
+    /**
+     * 주문 취소 로직
+     */
     @Transactional
     public ResponseEntity<ResponseMessage> cancelOrder(Long userId,
                                                        Long orderId) {
+        // 주문을 조회
         Order order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new NullPointerException("존재하지 않는 주문 번호입니다."));
 
+        // 주문의 소유자 확인
         if (!order.getUserId()
                 .equals(userId)) {
             throw new SecurityException("이 주문에 접근할 권한이 없습니다.");
         }
 
-        switch (order.getOrderStatus()) {
+        // Redis에서 아이템 ID와 관련된 재고를 갱신하기 위한 키 생성
+        String cacheKey = "itemId:" + order.getItemId() + ":quantity";
+        String lockKey  = "itemId:" + order.getItemId() + ":lock";
 
-            // 0일차, 결제 완료
-            case PAYMENT_STATUS_COMPLETED:
+        // 주문 상태
+        switch (order.getOrderStatus()) {
+            case PAYMENT_STATUS_COMPLETED:  // 결제 완료 상태
+                // 주문 상태를 취소 상태로 변경
                 order.updateOrderStatus(OrderStatus.ORDER_CANCELED_BY_USER);
                 orderRepository.saveAndFlush(order);
+
+                // Redis에서 재고 수량을 증가시키기
+                adjustStockInRedis(cacheKey, lockKey, order.getItemId(), order.getOrderCount());
 
                 return ResponseEntity.status(HttpStatus.OK)
                         .body(ResponseMessage.builder()
                                 .statusCode(HttpStatus.OK.value())
-                                .resultMessage("반품이 성공적으로 진행되었습니다")
+                                .resultMessage("주문이 성공적으로 취소되었습니다.")
                                 .build());
 
-            // 1일차, 배송 중
-            case DELIVERY_IN_PROGRESS:
-                return ResponseEntity.status(HttpStatus.OK)
+            case DELIVERY_IN_PROGRESS:  // 배송 중
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                         .body(ResponseMessage.builder()
                                 .statusCode(HttpStatus.BAD_REQUEST.value())
-                                .resultMessage("현재 배송이 진행중이라 취소가 불가능 합니다")
+                                .resultMessage("현재 배송이 진행중이라 취소가 불가능합니다.")
                                 .build());
 
-            // 2일차, 배송 완료
-            case DELIVERY_COMPLETED:
+            case DELIVERY_COMPLETED:  // 배송 완료
                 if (Duration.between(order.getModifiedAt(), LocalDateTime.now())
                         .toDays() < 2) {
+                    // 주문 상태를 취소 상태로 변경
                     order.updateOrderStatus(OrderStatus.ORDER_CANCELED_BY_USER);
                     orderRepository.saveAndFlush(order);
+
+                    // Redis에서 재고 수량을 증가시키기
+                    adjustStockInRedis(cacheKey, lockKey, order.getItemId(), order.getOrderCount());
 
                     return ResponseEntity.status(HttpStatus.OK)
                             .body(ResponseMessage.builder()
                                     .statusCode(HttpStatus.OK.value())
-                                    .resultMessage("반품이 성공적으로 진행되었습니다")
+                                    .resultMessage("주문이 성공적으로 취소되었습니다.")
                                     .build());
-
                 } else {
                     return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                             .body(ResponseMessage.builder()
                                     .statusCode(HttpStatus.BAD_REQUEST.value())
-                                    .resultMessage("기간이 지나 반품이 진행되지 않았습니다")
+                                    .resultMessage("기간이 지나 반품이 진행되지 않았습니다.")
                                     .build());
                 }
+
             default:
-                throw new RuntimeException("Order 오류 발생");
+                throw new RuntimeException("Order 상태 오류 발생");
+        }
+    }
+
+    /**
+     * Redis에서 재고 수량을 안전하게 증가시키는 메서드
+     */
+    private void adjustStockInRedis(String cacheKey,
+                                    String lockKey,
+                                    Long itemId,
+                                    Integer orderCount) {
+        Boolean isLocked = redisTemplate.opsForValue()
+                .setIfAbsent(lockKey, "LOCKED", Duration.ofSeconds(10));
+        if (isLocked != null && isLocked) {
+            try {
+                // Redis에서 아이템의 수량을 가져옴
+                Integer currentStock = (Integer) redisTemplate.opsForValue()
+                        .get(cacheKey);
+
+                if (currentStock != null) {
+                    // 현재 재고가 존재하면 재고를 증가시킴
+                    redisTemplate.opsForValue()
+                            .increment(cacheKey, orderCount);
+                } else {
+                    // Redis에 재고 값이 없다면 DB에서 재고를 가져오고, Redis에 저장
+                    Integer dbStock = feignOrderToItemService.getItemQuantity(itemId)
+                            .getQuantity();
+                    redisTemplate.opsForValue()
+                            .set(cacheKey, dbStock + orderCount);
+                }
+            } catch (Exception e) {
+                log.error("Redis에서 재고 수량을 업데이트하는 중 오류 발생: {}", e.getMessage());
+                throw new RuntimeException("재고를 업데이트하는 데 실패했습니다.");
+            } finally {
+                // 락 해제
+                redisTemplate.delete(lockKey);
+            }
+        } else {
+            log.warn("다른 프로세스가 Redis 잠금을 보유하고 있어 재고를 업데이트할 수 없습니다.");
         }
     }
 
@@ -224,20 +293,22 @@ public class OrderService {
     public void orderTimeCheck() {
         List<Order> orderList = orderRepository.findAll();
         for (Order order : orderList) {
-
             switch (order.getOrderStatus()) {
-
                 case PAYMENT_STATUS_COMPLETED:
                     if (Duration.between(order.getCreatedAt(), LocalDateTime.now())
                             .toDays() == 1) {
                         order.updateOrderStatus(OrderStatus.DELIVERY_IN_PROGRESS);
+                        break;
                     }
+                    break;
 
                 case DELIVERY_IN_PROGRESS:
                     if (Duration.between(order.getModifiedAt(), LocalDateTime.now())
                             .toDays() == 1) {
                         order.updateOrderStatus(OrderStatus.DELIVERY_COMPLETED);
+                        break;
                     }
+                    break;
 
                 case ORDER_CANCELLATION_IN_PROGRESS:
                     if (Duration.between(order.getModifiedAt(), LocalDateTime.now())
@@ -245,7 +316,10 @@ public class OrderService {
                         order.updateOrderStatus(OrderStatus.ORDER_CANCELED_BY_USER);
                         feignOrderToItemService.addItemQuantity(order.getItemId(), order.getOrderCount());
                         orderRepository.saveAndFlush(order);
+                        break;
                     }
+                    break;
+
                 default:
                     throw new RuntimeException("orderTimeCheck 오류 발생");
             }
