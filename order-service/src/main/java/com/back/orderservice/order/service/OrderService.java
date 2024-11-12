@@ -40,6 +40,9 @@ public class OrderService {
     private final RedisTemplate<String, Object> redisTemplate;
     private final KafkaTemplate<String, Order>  kafkaTemplate;
 
+    private static final int MAX_RETRIES = 3;      // 잠금 획득을 위한 최대 재시도 횟수
+    private static final int WAIT_TIME   = 1;        // 잠금 대기 시간 (초)
+    private static final int LEASE_TIME  = 5;       // 잠금 유지 시간 (초)
 
     /**
      * 주문 리스트 보기
@@ -87,9 +90,6 @@ public class OrderService {
     }
 
 
-    /**
-     * 주문하기
-     */
     @Transactional
     public ResponseEntity<ResponseMessage> createOrder(Long userId,
                                                        CreateOrderDTO createOrderDTO) {
@@ -100,182 +100,164 @@ public class OrderService {
         String cacheKey = "itemId:" + itemId + ":quantity";
         String lockKey = "itemId:" + itemId + ":lock";
 
-        // Redis에서 재고 수량 조회
-        Integer redisItemQuantity = getItemStockFromRedis(cacheKey, lockKey, itemId);
+        // 재고 조회 및 검증
+        Integer redisItemQuantity = fetchStockWithLock(cacheKey, lockKey, itemId);
 
-        if (redisItemQuantity == null) {
-            throw new RuntimeException("재고 정보를 가져오는 데 실패했습니다.");
+        if (redisItemQuantity == null || redisItemQuantity < orderCount) {
+            throw new InsufficientStockException("재고가 부족합니다. 현재 재고: " + (redisItemQuantity == null ? 0 : redisItemQuantity));
         }
 
+        // 상품 정보 조회 및 결제 금액 검증
         Item item = feignOrderToItemService.eurekaItem(itemId);
-
-        // 주문 수량이 재고보다 크거나 재고가 0인 경우 예외 처리
-        if (redisItemQuantity < orderCount || redisItemQuantity == 0) {
-            throw new InsufficientStockException("재고가 부족합니다. 현재 재고: " + redisItemQuantity);
-        }
+        ;
 
         long totalOrderPrice = orderCount * item.getPrice();
-
-        // 결제 금액 확인
         if (payment != totalOrderPrice) {
-            throw new IllegalArgumentException(
-                    "결제 금액을 올바르게 입력하세요. 결제해야 할 금액은 " + totalOrderPrice + " 입니다, 주문 금액은 " + createOrderDTO.getPayment());
+            throw new IllegalArgumentException("결제 금액을 올바르게 입력하세요. 결제해야 할 금액은 " + totalOrderPrice + "입니다.");
         }
 
-        // Redis에서 재고 감소
+        // 재고 감소
+        decreaseStockWithLock(cacheKey, lockKey, orderCount);
+
+        // 주문 생성
+        Order order = new Order(userId, itemId, orderCount, totalOrderPrice);
+
+        // Kafka 메시지 발송
         try {
-            redisTemplate.opsForValue()
-                    .decrement(cacheKey, orderCount);
+            kafkaTemplate.send("order_create", order);
         } catch (Exception e) {
-            log.error("Redis에서 재고를 감소시키는 데 실패했습니다. error: {}", e.getMessage());
-            throw new RuntimeException("재고를 감소시키는 데 실패했습니다. 시스템 관리자에게 문의하세요.");
+            log.error("Kafka 메시지 발송 실패: {}", e.getMessage());
         }
 
-        // 주문 Entity 생성 및 저장
-        Order order = new Order(userId, item.getItemId(), orderCount, totalOrderPrice);
-        orderRepository.save(order);
-
-        // Kafka 메시지 발송 (주문 생성 이벤트)
-        kafkaTemplate.send("order_create", order);
-
-        ResponseMessage responseMessage = ResponseMessage.builder()
+        // 응답 반환
+        return ResponseEntity.ok(ResponseMessage.builder()
                 .data(order)
                 .statusCode(200)
                 .resultMessage("주문이 성공했습니다.")
-                .build();
-
-        return ResponseEntity.ok(responseMessage);
+                .build());
     }
 
-    /**
-     * Redis에서 재고를 안전하게 가져오기 위한 메서드
-     * Redisson을 사용하여 분산 락을 처리
-     */
-    private Integer getItemStockFromRedis(String cacheKey,
-                                          String lockKey,
-                                          Long itemId) {
-        Integer redisItemQuantity = null;
+    private Integer fetchStockWithLock(String cacheKey,
+                                       String lockKey,
+                                       Long itemId) {
+        // 잠금 획득을 위한 재시도 로직 및 잠금 시간 단축
+        for (int i = 0; i < MAX_RETRIES; i++) {
+            RLock lock = redissonClient.getLock(lockKey);
+            try {
+                if (lock.tryLock(WAIT_TIME, LEASE_TIME, TimeUnit.SECONDS)) {
 
-        // Redisson을 사용하여 락을 획득
-        RLock lock = redissonClient.getLock(lockKey);
-
-        try {
-            // 락을 10초 동안 기다리며 획득
-            if (lock.tryLock(10, 10, TimeUnit.SECONDS)) {
-                try {
-                    // Redis에서 재고 가져오기
-                    redisItemQuantity = (Integer) redisTemplate.opsForValue()
+                    Integer stock = (Integer) redisTemplate.opsForValue()
                             .get(cacheKey);
-
-                    if (redisItemQuantity == null) {
-                        // Redis에 값이 없으면 DB에서 가져오기
-                        redisItemQuantity = feignOrderToItemService.getItemQuantity(itemId)
+                    if (stock == null) {
+                        stock = feignOrderToItemService.getItemQuantity(itemId)
                                 .getQuantity();
-                        // Redis에 재고 값 저장
                         redisTemplate.opsForValue()
-                                .set(cacheKey, redisItemQuantity);
+                                .set(cacheKey, stock);
                     }
-                } catch (Exception e) {
-                    log.error("Redis에서 재고 정보를 가져오는 중 오류 발생. error: {}", e.getMessage());
-                    throw new RuntimeException("Redis 에서 재고 정보를 가져오는 중 오류가 발생했습니다.");
-                } finally {
-                    // 락 해제
+                    return stock;
+
+                }
+            } catch (InterruptedException e) {
+                Thread.currentThread()
+                        .interrupt();
+                throw new RuntimeException("재고 잠금 중 오류 발생", e);
+            } finally {
+                if (lock.isHeldByCurrentThread()) {
                     lock.unlock();
                 }
-            } else {
-                log.warn("다른 프로세스가 Redis 잠금을 보유하고 있어 재고를 가져올 수 없습니다.");
             }
-        } catch (InterruptedException e) {
-            Thread.currentThread()
-                    .interrupt();  // 인터럽트 처리
-            log.error("Redisson 락 대기 중 오류 발생: {}", e.getMessage());
         }
-
-        return redisItemQuantity;
+        throw new RuntimeException("잠금 획득 실패: 재고 잠금을 가져올 수 없습니다.");
     }
 
+    // 초기 재고 설정을 위한 메서드 분리
 
-    /**
-     * 주문 취소 로직
-     */
+    private void decreaseStockWithLock(String cacheKey,
+                                       String lockKey,
+                                       Integer orderCount) {
+        // 잠금 획득을 위한 재시도 로직
+        for (int i = 0; i < MAX_RETRIES; i++) {
+            RLock lock = redissonClient.getLock(lockKey);
+            try {
+                if (lock.tryLock(WAIT_TIME, LEASE_TIME, TimeUnit.SECONDS)) {
+                    redisTemplate.opsForValue()
+                            .decrement(cacheKey, orderCount);
+                    return;
+                }
+            } catch (InterruptedException e) {
+                Thread.currentThread()
+                        .interrupt();
+                throw new RuntimeException("재고 감소 잠금 중 오류 발생", e);
+            } finally {
+                if (lock.isHeldByCurrentThread()) {
+                    lock.unlock();
+                }
+            }
+        }
+        throw new RuntimeException("잠금 획득 실패: 재고 감소 잠금을 가져올 수 없습니다.");
+    }
+
     @Transactional
     public ResponseEntity<ResponseMessage> cancelOrder(Long userId,
                                                        Long orderId) {
-        // 주문을 조회
         Order order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new NullPointerException("존재하지 않는 주문 번호입니다."));
-
-        // 주문의 소유자 확인
         if (!order.getUserId()
                 .equals(userId)) {
             throw new SecurityException("이 주문에 접근할 권한이 없습니다.");
         }
 
-        // Redis에서 아이템 ID와 관련된 재고를 갱신하기 위한 키 생성
         String cacheKey = "itemId:" + order.getItemId() + ":quantity";
         String lockKey = "itemId:" + order.getItemId() + ":lock";
 
-        // 주문 상태에 따라 다르게 처리
         switch (order.getOrderStatus()) {
-            case PAYMENT_STATUS_COMPLETED:  // 결제 완료 상태
-                // 주문 상태를 취소 상태로 변경
-                order.updateOrderStatus(OrderStatus.ORDER_CANCELED_BY_USER);
-                orderRepository.saveAndFlush(order);
+            case PAYMENT_STATUS_COMPLETED:
+                cancelOrderAndUpdateStock(order, cacheKey, lockKey);
+                return buildResponse(HttpStatus.OK, "주문이 성공적으로 취소되었습니다.");
 
-                // Redis에서 재고 수량을 증가시키기
-                adjustStockInRedis(cacheKey, lockKey, order.getItemId(), order.getOrderCount());
+            case DELIVERY_IN_PROGRESS:
+                return buildResponse(HttpStatus.BAD_REQUEST, "현재 배송이 진행중이라 취소가 불가능합니다.");
 
-                return ResponseEntity.status(HttpStatus.OK)
-                        .body(ResponseMessage.builder()
-                                .statusCode(HttpStatus.OK.value())
-                                .resultMessage("주문이 성공적으로 취소되었습니다.")
-                                .build());
-
-            case DELIVERY_IN_PROGRESS:  // 배송 중
-                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                        .body(ResponseMessage.builder()
-                                .statusCode(HttpStatus.BAD_REQUEST.value())
-                                .resultMessage("현재 배송이 진행중이라 취소가 불가능합니다.")
-                                .build());
-
-            case DELIVERY_COMPLETED:  // 배송 완료
+            case DELIVERY_COMPLETED:
                 if (Duration.between(order.getModifiedAt(), LocalDateTime.now())
                         .toDays() < 2) {
-                    // 주문 상태를 취소 상태로 변경
-                    order.updateOrderStatus(OrderStatus.ORDER_CANCELED_BY_USER);
-                    orderRepository.saveAndFlush(order);
-
-                    // Redis에서 재고 수량을 증가시키기
-                    adjustStockInRedis(cacheKey, lockKey, order.getItemId(), order.getOrderCount());
-
-                    return ResponseEntity.status(HttpStatus.OK)
-                            .body(ResponseMessage.builder()
-                                    .statusCode(HttpStatus.OK.value())
-                                    .resultMessage("주문이 성공적으로 취소되었습니다.")
-                                    .build());
-                } else {
-                    return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                            .body(ResponseMessage.builder()
-                                    .statusCode(HttpStatus.BAD_REQUEST.value())
-                                    .resultMessage("기간이 지나 반품이 진행되지 않았습니다.")
-                                    .build());
+                    cancelOrderAndUpdateStock(order, cacheKey, lockKey);
+                    return buildResponse(HttpStatus.OK, "주문이 성공적으로 취소되었습니다.");
                 }
+                return buildResponse(HttpStatus.BAD_REQUEST, "기간이 지나 반품이 진행되지 않았습니다.");
 
             default:
                 throw new RuntimeException("Order 상태 오류 발생");
         }
     }
 
+    private void cancelOrderAndUpdateStock(Order order,
+                                           String cacheKey,
+                                           String lockKey) {
+        order.updateOrderStatus(OrderStatus.ORDER_CANCELED_BY_USER);
+        orderRepository.saveAndFlush(order);
+        adjustStockInRedis(cacheKey, lockKey, order.getItemId(), order.getOrderCount());
+    }
+
+    private ResponseEntity<ResponseMessage> buildResponse(HttpStatus status,
+                                                          String message) {
+        return ResponseEntity.status(status)
+                .body(ResponseMessage.builder()
+                        .statusCode(status.value())
+                        .resultMessage(message)
+                        .build());
+    }
+
 
     /**
-     * Redis에서 재고 수량을 안전하게 증가시키는 메서드
+     * Redis에서 재고 수량 증가
      */
     private void adjustStockInRedis(String cacheKey,
                                     String lockKey,
                                     Long itemId,
                                     Integer orderCount) {
         // Redisson에서 락을 획득
-        RLock lock = redissonClient.getLock(lockKey);  // RedissonClient를 통해 락을 가져옵니다.
+        RLock lock = redissonClient.getLock(lockKey);
 
         try {
             // 락을 10초 동안 기다리며 획득
@@ -324,7 +306,10 @@ public class OrderService {
                 case PAYMENT_STATUS_COMPLETED:
                     if (Duration.between(order.getCreatedAt(), LocalDateTime.now())
                             .toDays() == 1) {
+                        String cacheKey = "itemId:" + order.getItemId() + ":quantity";
                         order.updateOrderStatus(OrderStatus.DELIVERY_IN_PROGRESS);
+
+
                         break;
                     }
                     break;
@@ -333,6 +318,7 @@ public class OrderService {
                     if (Duration.between(order.getModifiedAt(), LocalDateTime.now())
                             .toDays() == 1) {
                         order.updateOrderStatus(OrderStatus.DELIVERY_COMPLETED);
+                        String cacheKey = "itemId:" + order.getItemId() + ":quantity";
                         break;
                     }
                     break;
@@ -341,8 +327,6 @@ public class OrderService {
                     if (Duration.between(order.getModifiedAt(), LocalDateTime.now())
                             .toDays() == 1) {
                         order.updateOrderStatus(OrderStatus.ORDER_CANCELED_BY_USER);
-                        feignOrderToItemService.addItemQuantity(order.getItemId(), order.getOrderCount());
-                        orderRepository.saveAndFlush(order);
                         break;
                     }
                     break;
