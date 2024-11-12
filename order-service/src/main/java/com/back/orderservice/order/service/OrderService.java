@@ -109,7 +109,6 @@ public class OrderService {
 
         // 상품 정보 조회 및 결제 금액 검증
         Item item = feignOrderToItemService.eurekaItem(itemId);
-        ;
 
         long totalOrderPrice = orderCount * item.getPrice();
         if (payment != totalOrderPrice) {
