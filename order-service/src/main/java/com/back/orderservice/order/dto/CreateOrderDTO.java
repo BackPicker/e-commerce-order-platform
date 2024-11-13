@@ -13,5 +13,5 @@ public class CreateOrderDTO {
     @NotNull
     private Integer orderCount;
     @NotNull
-    private long payment;
+    private long    payment;
 }

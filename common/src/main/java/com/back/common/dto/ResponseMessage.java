@@ -12,13 +12,12 @@ public class ResponseMessage {
     private Object data;
     private int    statusCode;
     private String resultMessage;
+    private String detailMessage;
 
     public ResponseMessage(int statusCode,
                            String resultMessage) {
         this.statusCode    = statusCode;
         this.resultMessage = resultMessage;
     }
-
-    private String detailMessage;
 
 }

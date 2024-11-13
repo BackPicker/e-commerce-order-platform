@@ -33,16 +33,14 @@ import java.util.concurrent.TimeUnit;
 @RequiredArgsConstructor
 public class OrderService {
 
-    private final OrderRepository               orderRepository;
-    private final FeignOrderToItemService       feignOrderToItemService;
-
-    private final RedissonClient redissonClient;
-    private final RedisTemplate<String, Object> redisTemplate;
-    private final KafkaTemplate<String, Order>  kafkaTemplate;
-
     private static final int MAX_RETRIES = 3;      // 잠금 획득을 위한 최대 재시도 횟수
     private static final int WAIT_TIME   = 1;        // 잠금 대기 시간 (초)
     private static final int LEASE_TIME  = 5;       // 잠금 유지 시간 (초)
+    private final OrderRepository         orderRepository;
+    private final FeignOrderToItemService feignOrderToItemService;
+    private final RedissonClient                redissonClient;
+    private final RedisTemplate<String, Object> redisTemplate;
+    private final KafkaTemplate<String, Order>  kafkaTemplate;
 
     /**
      * 주문 리스트 보기
@@ -93,12 +91,12 @@ public class OrderService {
     @Transactional
     public ResponseEntity<ResponseMessage> createOrder(Long userId,
                                                        CreateOrderDTO createOrderDTO) {
-        Long itemId = createOrderDTO.getItemId();
+        Long    itemId     = createOrderDTO.getItemId();
         Integer orderCount = createOrderDTO.getOrderCount();
-        long payment = createOrderDTO.getPayment();
+        long    payment    = createOrderDTO.getPayment();
 
         String cacheKey = "itemId:" + itemId + ":quantity";
-        String lockKey = "itemId:" + itemId + ":lock";
+        String lockKey  = "itemId:" + itemId + ":lock";
 
         // 재고 조회 및 검증
         Integer redisItemQuantity = fetchStockWithLock(cacheKey, lockKey, itemId);
@@ -206,7 +204,7 @@ public class OrderService {
         }
 
         String cacheKey = "itemId:" + order.getItemId() + ":quantity";
-        String lockKey = "itemId:" + order.getItemId() + ":lock";
+        String lockKey  = "itemId:" + order.getItemId() + ":lock";
 
         switch (order.getOrderStatus()) {
             case PAYMENT_STATUS_COMPLETED:
