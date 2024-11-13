@@ -170,7 +170,6 @@ public class OrderService {
     }
 
     // 초기 재고 설정을 위한 메서드 분리
-
     private void decreaseStockWithLock(String cacheKey,
                                        String lockKey,
                                        Integer orderCount) {
