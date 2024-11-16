@@ -33,14 +33,14 @@ import java.util.concurrent.TimeUnit;
 @RequiredArgsConstructor
 public class OrderService {
 
-    private static final int MAX_RETRIES = 3;      // 잠금 획득을 위한 최대 재시도 횟수
-    private static final int WAIT_TIME   = 1;        // 잠금 대기 시간 (초)
-    private static final int LEASE_TIME  = 5;       // 잠금 유지 시간 (초)
-    private final OrderRepository         orderRepository;
-    private final FeignOrderToItemService feignOrderToItemService;
-    private final RedissonClient                redissonClient;
-    private final RedisTemplate<String, Object> redisTemplate;
-    private final KafkaTemplate<String, Order>  kafkaTemplate;
+    private static final int                           MAX_RETRIES = 3;      // 잠금 획득을 위한 최대 재시도 횟수
+    private static final int                           WAIT_TIME   = 1;        // 잠금 대기 시간 (초)
+    private static final int                           LEASE_TIME  = 5;       // 잠금 유지 시간 (초)
+    private final        OrderRepository               orderRepository;
+    private final        FeignOrderToItemService       feignOrderToItemService;
+    private final        RedissonClient                redissonClient;
+    private final        RedisTemplate<String, Object> redisTemplate;
+    private final        KafkaTemplate<String, Order>  kafkaTemplate;
 
     /**
      * 주문 리스트 보기
