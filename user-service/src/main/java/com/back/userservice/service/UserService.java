@@ -25,7 +25,7 @@ import javax.crypto.BadPaddingException;
 import javax.crypto.IllegalBlockSizeException;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
-import java.util.Optional;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 
 @Service
@@ -161,4 +161,15 @@ public class UserService {
     }
 
 
+    public Queue<User> eurekaGetUserByQueue(List<Long> userIdWishList) {
+        Queue<User> userQueue = new ArrayDeque<>();
+        for (Long wishUserId : userIdWishList) {
+            User user = userRepository.findById(wishUserId)
+                    .orElseThrow(() -> new NoSuchElementException("회원을 찾을 수 없습니다"));
+            userQueue.offer(user);
+        }
+
+
+        return userQueue;
+    }
 }

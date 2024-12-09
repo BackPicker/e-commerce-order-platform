@@ -20,8 +20,8 @@ import java.util.List;
 @RequiredArgsConstructor
 public class WishListService {
 
-    private final WishListRepository         wishListRepository;
-    private final FeignWishListToItemService feignWishListToItemService;
+    private final WishListRepository   wishListRepository;
+    private final FeignWishListService feignWishListService;
 
 
     @Transactional
@@ -42,7 +42,7 @@ public class WishListService {
                                 WishListRequestDto wishListItemDto) {
         Long    paramItemId   = wishListItemDto.getItemId();
         Integer paramQuantity = wishListItemDto.getQuantity();
-        Item    item          = feignWishListToItemService.getItem(paramItemId);
+        Item    item          = feignWishListService.getItem(paramItemId);
 
         if (wishListRepository.existsByUserIdAndItemId(userId, item.getItemId())) {
             log.info("wishList 가 존재해서 수량을 update 합니다");
@@ -88,47 +88,14 @@ public class WishListService {
 
     }
 
+    /// ///////////////////////
 
-/*
-    public void removeWishList(Long userId) {
-        // 위시리스트 항목 목록을 안전하게 복사
-        List<WishListItem> itemsToRemove = new ArrayList<>(wishListItemRepositoryImpl.findByUserId(userId)
-                .get()
-                .getWishListItemList());
-
-        // 각 항목에 대해 삭제 로직 실행
-        for (WishListItem item : itemsToRemove) {
-            wishListItemRepository.delete(item);
-        }
-    }
-*/
-
-
-
-
-/*
-    private WishListItem findWishListItem(WishList wishList,
-                                          Long itemId) {
-        log.info("wishList = {}, itemId = {}", wishList, itemId);
-
-        // 위시리스트 아이템 리스트 출력
-        wishList.getWishListItemList()
-                .forEach(item -> log.info("아이템 ID: {}", item.getItem()
-                        .getId()));
-
-        return wishList.getWishListItemList()
-                .stream()
-                .filter(item -> item.getItem()
-                        .getId()
-                        .equals(itemId))
-                .findFirst()
-                .orElseThrow(() -> {
-                    log.error("아이템을 찾을 수 없습니다. itemId: {}", itemId);
-                    return new ItemNotFoundException("아이템을 찾을 수 없습니다.");
-                });
+    public List<WishList> eurekaWishListByItemId(Long itemId) {
+        Item item = feignWishListService.getItem(itemId);
+        return wishListRepository.findAllByItemId(item.getItemId());
     }
 
-*/
+
 
 
 }

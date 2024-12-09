@@ -2,17 +2,19 @@ package com.back.itemservice.controller;
 
 
 import com.back.common.dto.ResponseMessage;
-import com.back.itemservice.dto.ItemDetailResponseDto;
-import com.back.itemservice.dto.ItemQuantityResponseDto;
-import com.back.itemservice.dto.ItemRequestDto;
-import com.back.itemservice.dto.ItemResponseDto;
+import com.back.itemservice.dto.*;
 import com.back.itemservice.repository.ItemRepository;
 import com.back.itemservice.service.ItemService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import javax.crypto.BadPaddingException;
+import javax.crypto.IllegalBlockSizeException;
+import java.security.InvalidAlgorithmParameterException;
+import java.security.InvalidKeyException;
 import java.util.List;
 
 @Slf4j
@@ -49,6 +51,7 @@ public class ItemController {
         return itemService.getItems(page, size);
     }
 
+    // 상품 하나 가져오기
     @GetMapping("/{itemId}")
     public ItemDetailResponseDto getItemDetail(
             @PathVariable
@@ -75,7 +78,22 @@ public class ItemController {
                 .body(responseMessage);
     }
 
-    // 상품 삭젠
+    // 상품 재입고
+    @PutMapping("/{itemId}/restock")
+    public ResponseEntity<ResponseMessage> restockItem(
+            @PathVariable("itemId")
+            Long itemId,
+            @RequestBody
+            ReStockItemDTO reStockItemDTO) throws InvalidAlgorithmParameterException, IllegalBlockSizeException, BadPaddingException, InvalidKeyException {
+        ItemResponseDto itemResponseDto = itemService.restockItem(itemId, reStockItemDTO.getReStockQuantity());
+        ResponseMessage responseMessage = ResponseMessage.builder()
+                .data(itemResponseDto)
+                .statusCode(HttpStatus.OK.value())
+                .build();
+        return ResponseEntity.ok(responseMessage);
+    }
+
+    // 상품 삭제
     @DeleteMapping("/{itemId}")
     public ResponseEntity<ResponseMessage> deleteItemDetail(
             @PathVariable("itemId")

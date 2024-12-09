@@ -4,20 +4,20 @@ import com.back.common.dto.ResponseMessage;
 import com.back.userservice.dto.EmailRequestDto;
 import com.back.userservice.dto.LoginRequestDto;
 import com.back.userservice.dto.SignupRequestDto;
+import com.back.userservice.entity.User;
 import com.back.userservice.service.UserService;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.apache.coyote.BadRequestException;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import javax.crypto.BadPaddingException;
 import javax.crypto.IllegalBlockSizeException;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
+import java.util.List;
+import java.util.Queue;
 
 @RestController
 @RequestMapping("/api/user")
@@ -62,4 +62,14 @@ public class UserController {
 
         return ResponseEntity.ok(responseMessage);
     }
+
+    // Eureka
+    @GetMapping("/api/user/getQueue")
+    Queue<User> eurekaGetUserByQueue(List<Long> userIdWishList) {
+        return userService.eurekaGetUserByQueue(userIdWishList);
+    }
+
+    ;
+
+
 }

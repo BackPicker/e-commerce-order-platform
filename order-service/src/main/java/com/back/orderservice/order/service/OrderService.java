@@ -36,9 +36,9 @@ public class OrderService {
     private static final int                           MAX_RETRIES = 3;      // 잠금 획득을 위한 최대 재시도 횟수
     private static final int                           WAIT_TIME   = 1;        // 잠금 대기 시간 (초)
     private static final int                           LEASE_TIME  = 5;       // 잠금 유지 시간 (초)
-    private final        OrderRepository               orderRepository;
-    private final        FeignOrderToItemService       feignOrderToItemService;
-    private final        RedissonClient                redissonClient;
+    private final OrderRepository   orderRepository;
+    private final FeignOrderService feignOrderService;
+    private final RedissonClient    redissonClient;
     private final        RedisTemplate<String, Object> redisTemplate;
     private final        KafkaTemplate<String, Order>  kafkaTemplate;
 
@@ -54,7 +54,7 @@ public class OrderService {
 
         List<OrderResponseDto> orderResponseDtoList = new ArrayList<>();
         for (Order order : orderList) {
-            Item             item             = feignOrderToItemService.eurekaItem(order.getItemId());
+            Item             item             = feignOrderService.eurekaItem(order.getItemId());
             OrderResponseDto orderResponseDto = OrderResponseDto.entityToDTO(order, item, userId);
             orderResponseDtoList.add(orderResponseDto);
         }
@@ -81,7 +81,7 @@ public class OrderService {
             throw new IllegalArgumentException("이 주문은 해당 사용자에게 속하지 않습니다.");
         }
 
-        Item             item             = feignOrderToItemService.eurekaItem(order.getItemId());
+        Item             item             = feignOrderService.eurekaItem(order.getItemId());
         OrderResponseDto orderResponseDto = OrderResponseDto.entityToDTO(order, item, userId);
         return ResponseEntity.status(HttpStatus.OK)
                 .body(orderResponseDto);
@@ -106,7 +106,7 @@ public class OrderService {
         }
 
         // 상품 정보 조회 및 결제 금액 검증
-        Item item = feignOrderToItemService.eurekaItem(itemId);
+        Item item = feignOrderService.eurekaItem(itemId);
 
         long totalOrderPrice = orderCount * item.getPrice();
         if (payment != totalOrderPrice) {
@@ -146,7 +146,7 @@ public class OrderService {
                     Integer stock = (Integer) redisTemplate.opsForValue()
                             .get(cacheKey);
                     if (stock == null) {
-                        stock = feignOrderToItemService.getItemQuantity(itemId)
+                        stock = feignOrderService.getItemQuantity(itemId)
                                 .getQuantity();
                         redisTemplate.opsForValue()
                                 .set(cacheKey, stock);
@@ -202,6 +202,7 @@ public class OrderService {
                 .equals(userId)) {
             throw new SecurityException("이 주문에 접근할 권한이 없습니다.");
         }
+
 
         String cacheKey = "itemId:" + order.getItemId() + ":quantity";
         String lockKey  = "itemId:" + order.getItemId() + ":lock";
@@ -269,7 +270,7 @@ public class OrderService {
                                 .increment(cacheKey, orderCount);
                     } else {
                         // Redis에 재고 값이 없다면 DB에서 재고를 가져오고, Redis에 저장
-                        Integer dbStock = feignOrderToItemService.getItemQuantity(itemId)
+                        Integer dbStock = feignOrderService.getItemQuantity(itemId)
                                 .getQuantity();
                         redisTemplate.opsForValue()
                                 .set(cacheKey, dbStock + orderCount);

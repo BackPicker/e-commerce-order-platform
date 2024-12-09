@@ -3,6 +3,7 @@ package com.back.wishlistservice.controller;
 
 import com.back.common.dto.ResponseMessage;
 import com.back.common.utils.ParseRequestUtil;
+import com.back.wishlistservice.domain.WishList;
 import com.back.wishlistservice.dto.WishListRequestDto;
 import com.back.wishlistservice.service.WishListService;
 import jakarta.servlet.http.HttpServletRequest;
@@ -11,6 +12,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @Slf4j
 @RestController
@@ -72,6 +75,14 @@ public class WishListController {
             Long wishListItemId) {
 
         return wishListService.removeWishListItem(wishListItemId);
+    }
+
+    /// /////////////////////////////////
+    @GetMapping("/api/wishlist/eureka/getUser/{itemId}/")
+    public List<WishList> eurekaWishListByItemId(
+            @PathVariable("itemId")
+            Long itemId) {
+        return wishListService.eurekaWishListByItemId(itemId);
     }
 
 }
