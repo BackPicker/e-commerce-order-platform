@@ -1,7 +1,6 @@
 package com.back.userservice.service;
 
 import com.back.common.dto.ResponseMessage;
-import com.back.common.exception.BizRuntimeException;
 import com.back.userservice.config.AES128Config;
 import com.back.userservice.dto.LoginRequestDto;
 import com.back.userservice.dto.SignupRequestDto;
@@ -10,12 +9,14 @@ import com.back.userservice.entity.User;
 import com.back.userservice.entity.UserRoleEnum;
 import com.back.userservice.repository.UserRepository;
 import com.back.userservice.utils.JwtUtil;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.dao.DataAccessException;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -25,7 +26,10 @@ import javax.crypto.BadPaddingException;
 import javax.crypto.IllegalBlockSizeException;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
-import java.util.*;
+import java.util.ArrayDeque;
+import java.util.List;
+import java.util.NoSuchElementException;
+import java.util.Queue;
 import java.util.concurrent.TimeUnit;
 
 @Service
@@ -53,11 +57,13 @@ public class UserService {
                             String verifyNumber) {
         String redisNumber = redisTemplate.opsForValue()
                 .get(verifyEmail);
-        log.info("redisNumbr = {}, veryfyNumber = {}", redisNumber, verifyNumber);
+        log.info("redisNumber = {}, verifyNumber = {}", redisNumber, verifyNumber);
 
+        // 인증 가능한 시간이 만료됐을 경우
         if (redisNumber == null) {
             throw new IllegalArgumentException("인증번호가 만료되었습니다, 다시 인증을 받아주세요");
         }
+        // 인증번호가 서로 다를 경우
         if (!redisNumber.equals(verifyNumber)) {
             throw new IllegalArgumentException("인증번호가 틀립니다");
         }
@@ -67,19 +73,20 @@ public class UserService {
     @Transactional
     public ResponseMessage signup(SignupRequestDto createUserRequestDto) throws InvalidAlgorithmParameterException, IllegalBlockSizeException, BadPaddingException, InvalidKeyException {
 
+        if (userRepository.existsUserByUsername(createUserRequestDto.getUsername())) {
+            throw new IllegalArgumentException("이미 존재하는 ID 입니다");
+        }
+
+        if (userRepository.existsUserByUsername(createUserRequestDto.getUsername())) {
+            throw new IllegalArgumentException("이미 존재하는 ID 입니다");
+        }
+
         String username = createUserRequestDto.getUsername();
         String password = passwordEncoder.encode(createUserRequestDto.getPassword());
-
         String email   = aes128Config.encryptAes(createUserRequestDto.getEmail());
         String phone   = aes128Config.encryptAes(createUserRequestDto.getPhoneNumber());
         String address = aes128Config.encryptAes(createUserRequestDto.getAddress());
 
-        if (userRepository.existsUserByUsername(username)) {
-            throw new IllegalArgumentException("이미 존재하는 ID 입니다");
-        }
-        if (userRepository.existsUserByEmail(email)) {
-            throw new IllegalArgumentException("이미 존재하는 EMAIL 입니다");
-        }
 
         UserRoleEnum role = UserRoleEnum.USER;
         if (createUserRequestDto.isAdmin()) {
@@ -88,25 +95,26 @@ public class UserService {
             }
             role = UserRoleEnum.ADMIN;
         }
+
         User user = new User(username, password, phone, email, address, role);
         userRepository.save(user);
-        UserResponseDto dto = new UserResponseDto(user);
         return ResponseMessage.builder()
-                .data(dto)
+                .data(new UserResponseDto(user))
                 .statusCode(201)
                 .resultMessage("회원가입 성공")
                 .build();
-
     }
 
     public ResponseMessage sendVerifyEmail(String emailParam) throws InvalidAlgorithmParameterException, IllegalBlockSizeException, BadPaddingException, InvalidKeyException {
         String aesEmail = aes128Config.encryptAes(emailParam);
+
         if (userRepository.existsUserByEmail(aesEmail)) {
             throw new IllegalArgumentException("이미 가입된 이메일 입니다");
         }
 
         redisTemplate.opsForValue()
                 .set(emailParam, sendMail(emailParam), 30, TimeUnit.MINUTES);
+
         return ResponseMessage.builder()
                 .statusCode(200)
                 .resultMessage("이메일 전송 성공")
@@ -132,32 +140,28 @@ public class UserService {
     }
 
 
-    public String login(LoginRequestDto loginRequestDto) {
-        try {
-            Optional<User> user = userRepository.findByUsername(loginRequestDto.getUsername());
-            if (user.isEmpty()) {
-                throw new BizRuntimeException("존재하지 않는 유저입니다.");
-            }
+    public ResponseEntity<?> login(LoginRequestDto loginRequestDto, HttpServletResponse response) {
+        String userName = loginRequestDto.getUsername();
+        String password = loginRequestDto.getPassword();
 
-            if (passwordEncoder.matches(loginRequestDto.getPassword(), user.get()
-                    .getPassword())) {
-                return jwtUtil.createToken(user.get()
-                        .getId(), user.get()
-                        .getRole()
-                        .toString());
-            } else {
-                throw new BizRuntimeException("잘못된 비밀번호입니다.");
-            }
-        } catch (DataAccessException e) {
-            log.error("로그인 처리 중 데이터베이스 오류 발생", e);
-            throw new BizRuntimeException("로그인 처리 중 데이터베이스 오류가 발생했습니다.", e);
-        } catch (BizRuntimeException e) {
-            log.error("로그인 처리 중 비즈니스 로직 오류 발생", e);
-            throw e;
-        } catch (Exception e) {
-            log.error("로그인 처리 중 예기치 않은 오류 발생", e);
-            throw new BizRuntimeException("로그인 처리 중 예기치 않은 오류가 발생했습니다.", e);
+        // 사용자 확인
+        User user = userRepository.findByUsername(userName)
+                .orElseThrow(() -> new NoSuchElementException("등록된 사용자가 없습니다"));
+
+        // 비밀번호 확인
+        if (!passwordEncoder.matches(password, user.getPassword())) {
+            throw new IllegalArgumentException("비밀번호가 일치하지 않습니다");
         }
+
+        // JWT 생성 및 쿠키에 저장 후 Response객체 추가
+        String token = jwtUtil.createToken(userName, user.getRole());
+        jwtUtil.addJwtToCookie(token, response);
+
+        return ResponseEntity.ok()
+                .body(ResponseMessage.builder()
+                              .statusCode(HttpStatus.OK.value())
+                              .build());
+
     }
 
 

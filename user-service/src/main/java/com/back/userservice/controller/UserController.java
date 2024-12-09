@@ -7,9 +7,12 @@ import com.back.userservice.dto.SignupRequestDto;
 import com.back.userservice.entity.User;
 import com.back.userservice.service.UserService;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.apache.coyote.BadRequestException;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.BindingResult;
+import org.springframework.validation.FieldError;
 import org.springframework.web.bind.annotation.*;
 
 import javax.crypto.BadPaddingException;
@@ -19,6 +22,7 @@ import java.security.InvalidKeyException;
 import java.util.List;
 import java.util.Queue;
 
+@Slf4j
 @RestController
 @RequestMapping("/api/user")
 @RequiredArgsConstructor
@@ -29,15 +33,27 @@ public class UserController {
     // 회원가입
     @PostMapping("/signup")
     public ResponseMessage createUser(
+            @Valid
             @RequestBody
-            SignupRequestDto signupRequestDto) throws BadRequestException, InvalidAlgorithmParameterException, IllegalBlockSizeException, BadPaddingException, InvalidKeyException {
+            SignupRequestDto signupRequestDto,
+            BindingResult bindingResult) throws InvalidAlgorithmParameterException, IllegalBlockSizeException, BadPaddingException, InvalidKeyException {
+
+        // Validation 예외 처리
+        List<FieldError> fieldErrors = bindingResult.getFieldErrors();
+        if (!fieldErrors.isEmpty()) {
+            for (FieldError fieldError : bindingResult.getFieldErrors()) {
+                log.error(fieldError.getField() + " : " + fieldError.getDefaultMessage());
+            }
+        }
+
+
         userService.verifyEmail(signupRequestDto.getEmail(), signupRequestDto.getVerifyNumber());
 
         return userService.signup(signupRequestDto);
     }
 
     // 이메일 인증
-    @PostMapping("/email")
+    @PostMapping("/verify-email")
     public ResponseMessage sendEmail(
             @RequestBody
             EmailRequestDto requestDto) throws InvalidAlgorithmParameterException, IllegalBlockSizeException, BadPaddingException, InvalidKeyException {
@@ -47,29 +63,18 @@ public class UserController {
 
     // 로그인
     @PostMapping("/login")
-    public ResponseEntity<ResponseMessage> login(
+    public ResponseEntity<?> login(
             @RequestBody
-            LoginRequestDto loginRequestDto,
-            HttpServletResponse response) throws BadRequestException {
+            LoginRequestDto loginRequestDto, HttpServletResponse response) {
 
-        String token = userService.login(loginRequestDto);
-
-        ResponseMessage responseMessage = ResponseMessage.builder()
-                .data(token)
-                .statusCode(200)
-                .resultMessage("Login successful")
-                .build();
-
-        return ResponseEntity.ok(responseMessage);
+        return userService.login(loginRequestDto, response);
     }
-
     // Eureka
     @GetMapping("/api/user/getQueue")
     Queue<User> eurekaGetUserByQueue(List<Long> userIdWishList) {
         return userService.eurekaGetUserByQueue(userIdWishList);
     }
 
-    ;
 
 
 }
