@@ -60,7 +60,7 @@ public class Item extends BaseEntity {
     }
 
     public void addQuantity(int orderCount) {
-        this.quantity = this.quantity + orderCount;
+        this.quantity += orderCount;
     }
 
     public void updateQuantity(Integer redisQuantity) {
