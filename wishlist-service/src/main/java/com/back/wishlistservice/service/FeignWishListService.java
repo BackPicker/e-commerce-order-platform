@@ -5,9 +5,8 @@ import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 
-@FeignClient(name = "gateway-service")
+@FeignClient(name = "item-service")
 public interface FeignWishListService {
-
     @GetMapping("/api/items/eureka/{itemId}")
     Item getItem(
             @PathVariable("itemId")
