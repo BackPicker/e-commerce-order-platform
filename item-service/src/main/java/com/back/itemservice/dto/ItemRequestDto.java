@@ -2,6 +2,7 @@ package com.back.itemservice.dto;
 
 
 import lombok.AccessLevel;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
@@ -14,6 +15,7 @@ public class ItemRequestDto {
     private int    price;
     private int    quantity;
 
+    @Builder
     public ItemRequestDto(String itemName,
                           String category,
                           int price,
