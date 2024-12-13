@@ -4,7 +4,7 @@ import jakarta.servlet.http.HttpServletRequest;
 
 public class ParseRequestUtil {
 
-    public Long extractUserIdFromRequest(HttpServletRequest request) {
+    public static Long extractUserIdFromRequest(HttpServletRequest request) {
         String userIdHeader = request.getHeader("x-claim-userid");
         if (userIdHeader == null) {
             throw new RuntimeException("헤더에 사용자 ID가 없습니다.");
