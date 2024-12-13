@@ -2,20 +2,16 @@ package com.back.itemservice.controller;
 
 
 import com.back.common.dto.ResponseMessage;
+import com.back.itemservice.domain.Item;
 import com.back.itemservice.dto.*;
-import com.back.itemservice.repository.ItemRepository;
 import com.back.itemservice.service.ItemService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import javax.crypto.BadPaddingException;
-import javax.crypto.IllegalBlockSizeException;
-import java.security.InvalidAlgorithmParameterException;
-import java.security.InvalidKeyException;
 import java.util.List;
+
 
 @Slf4j
 @RestController
@@ -23,98 +19,93 @@ import java.util.List;
 @RequiredArgsConstructor
 public class ItemController {
 
-    private final ItemService    itemService;
-    private final ItemRepository itemRepository;
+    private final ItemService itemService;
 
     @PostMapping("/add")
-    public ResponseEntity<ResponseMessage> itemSave(
+    public ResponseMessage itemSave(
             @RequestBody
             ItemRequestDto saveRequestDto) {
         ItemResponseDto itemResponseDto = itemService.saveItem(saveRequestDto);
-
-        ResponseMessage responseMessage = ResponseMessage.builder()
+        return ResponseMessage.builder()
                 .data(itemResponseDto)
-                .statusCode(201)
+                .statusCode(HttpStatus.CREATED.value())
                 .detailMessage("상품 저장이 완료되었습니다")
                 .build();
-
-        return ResponseEntity.ok(responseMessage);
     }
 
     @GetMapping("/list")
-    public List<ItemResponseDto> getItems(
+    public ResponseMessage getItems(
             @RequestParam(defaultValue = "1")
             int page,
             @RequestParam(defaultValue = "10")
             int size) {
-
-        return itemService.getItems(page, size);
+        List<ItemResponseDto> items = itemService.getItems(page, size);
+        return ResponseMessage.builder()
+                .data(items)
+                .statusCode(HttpStatus.OK.value())
+                .detailMessage("상품 목록을 성공적으로 조회했습니다")
+                .build();
     }
 
-    // 상품 하나 가져오기
     @GetMapping("/{itemId}")
-    public ItemDetailResponseDto getItemDetail(
+    public ResponseMessage getItemDetail(
             @PathVariable
             Long itemId) {
-
-        return itemService.getItemDetail(itemId);
+        ItemDetailResponseDto item = itemService.getItemDetail(itemId);
+        return ResponseMessage.builder()
+                .data(item)
+                .statusCode(HttpStatus.OK.value())
+                .detailMessage("상품 상세 정보를 성공적으로 조회했습니다")
+                .build();
     }
 
-    // 상품 수정
     @PutMapping("/{itemId}")
-    public ResponseEntity<ResponseMessage> updateItem(
-            @PathVariable("itemId")
+    public ResponseMessage updateItem(
+            @PathVariable
             Long itemId,
             @RequestBody
             ItemRequestDto requestDto) {
         ItemDetailResponseDto updatedItem = itemService.updateItem(itemId, requestDto);
-
-        ResponseMessage responseMessage = ResponseMessage.builder()
+        return ResponseMessage.builder()
                 .data(updatedItem)
-                .statusCode(204)
-                .detailMessage("Item 이 수정되었습니다")
+                .statusCode(HttpStatus.OK.value())
+                .detailMessage("상품이 성공적으로 수정되었습니다")
                 .build();
-        return ResponseEntity.status(204)
-                .body(responseMessage);
     }
 
-    // 상품 재입고
     @PutMapping("/{itemId}/restock")
-    public ResponseEntity<ResponseMessage> restockItem(
-            @PathVariable("itemId")
+    public ResponseMessage restockItem(
+            @PathVariable
             Long itemId,
             @RequestBody
-            ReStockItemDTO reStockItemDTO) throws InvalidAlgorithmParameterException, IllegalBlockSizeException, BadPaddingException, InvalidKeyException {
+            ReStockItemDTO reStockItemDTO) {
         ItemResponseDto itemResponseDto = itemService.restockItem(itemId, reStockItemDTO.getReStockQuantity());
-        ResponseMessage responseMessage = ResponseMessage.builder()
+        return ResponseMessage.builder()
                 .data(itemResponseDto)
                 .statusCode(HttpStatus.OK.value())
+                .detailMessage("상품이 성공적으로 재입고되었습니다")
                 .build();
-        return ResponseEntity.ok(responseMessage);
     }
 
-    // 상품 삭제
     @DeleteMapping("/{itemId}")
-    public ResponseEntity<ResponseMessage> deleteItemDetail(
-            @PathVariable("itemId")
+    public ResponseMessage deleteItemDetail(
+            @PathVariable
             Long itemId) {
         itemService.deleteItem(itemId);
-
-        ResponseMessage responseMessage = ResponseMessage.builder()
-                .data(null)
-                .statusCode(200)
-                .resultMessage("Item 삭제가 완료되었습니다")
+        return ResponseMessage.builder()
+                .statusCode(HttpStatus.OK.value())
+                .detailMessage("상품이 성공적으로 삭제되었습니다")
                 .build();
-        return ResponseEntity.ok(responseMessage);
     }
 
     // Eureka
 
     // 하나 가져오기
     @GetMapping("/eureka/{itemId}")
-    public ItemDetailResponseDto getEurekaItemDetail(
-            @PathVariable
+    public Item getEurekaItemDetail(
+            @PathVariable("itemId")
             Long itemId) {
+        log.info("getEurekaItemDetail 접근");
 
         return itemService.getEurekaItemDetail(itemId);
     }
