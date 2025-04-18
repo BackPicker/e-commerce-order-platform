@@ -25,7 +25,6 @@ public class AES128Config {
 
     private static final Charset ENCODING_TYPE = StandardCharsets.UTF_8;
     private static final String  INSTANCE_TYPE = "AES/CBC/PKCS5Padding";
-
     @Value("${aes.secret.key}")
     private String secretKey;
 
