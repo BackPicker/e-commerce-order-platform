@@ -31,6 +31,7 @@ public class AES128Config {
     private SecretKeySpec   secretKeySpec;
     private Cipher          cipher;
 
+
     @PostConstruct
     public void init() throws NoSuchPaddingException, NoSuchAlgorithmException {
         // secretKey 길이가 16바이트로 맞춰지도록 처리
