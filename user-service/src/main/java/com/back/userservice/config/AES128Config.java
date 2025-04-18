@@ -27,7 +27,6 @@ public class AES128Config {
     private static final String  INSTANCE_TYPE = "AES/CBC/PKCS5Padding";
     @Value("${aes.secret.key}")
     private String secretKey;
-
     private IvParameterSpec ivParameterSpec;
     private SecretKeySpec   secretKeySpec;
     private Cipher          cipher;
